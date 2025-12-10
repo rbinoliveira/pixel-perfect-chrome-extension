@@ -25,6 +25,11 @@ export class OverlayManager {
     this.fontSize = size;
     if (this.tooltipElement) {
       this.tooltipElement.style.fontSize = `${size}px`;
+      // Update padding and border-radius proportionally
+      const scale = size / 12; // 12px is the base size
+      this.tooltipElement.style.padding = `${Math.round(8 * scale)}px ${Math.round(12 * scale)}px`;
+      this.tooltipElement.style.borderRadius = `${Math.round(6 * scale)}px`;
+      this.tooltipElement.style.borderWidth = `${Math.round(2 * scale)}px`;
     }
   }
 
@@ -267,9 +272,16 @@ export class OverlayManager {
     }
 
     // Create tooltip - show different info based on element type
+    // Calculate scaled values based on fontSize
+    const scale = this.fontSize / 12; // 12px is the base size
+    const headerFontSize = Math.round((this.fontSize + 1) * 10) / 10; // Header slightly larger
+    const detailFontSize = Math.round((this.fontSize - 1) * 10) / 10; // Details slightly smaller
+    const marginBottom = Math.round(6 * scale);
+    const smallMarginBottom = Math.round(3 * scale);
+
     let tooltipHTML = `
       <div style="line-height: 1.4;">
-        <div style="font-weight: 600; margin-bottom: 6px; color: ${this.primaryColor}; font-size: 13px;">
+        <div style="font-weight: 600; margin-bottom: ${marginBottom}px; color: ${this.primaryColor}; font-size: ${headerFontSize}px;">
           &lt;${element.tagName.toLowerCase()}&gt; ${Math.round(rect.width)}×${Math.round(rect.height)}px
         </div>
     `;
