@@ -6,3 +6,10 @@ dist/
 *.local
 .vscode/
 .idea/
+
+.taskmaster/
+.claude/
+.cursor/
+.mcp.json
+CLAUDE.md
+DEPLOY.md
