@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pixel Perfect Inspector</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <div class="popup-container">
+      <div class="popup-header">
+        <h1>Pixel Perfect Inspector</h1>
+      </div>
+
+      <div class="inspection-control">
+        <div class="toggle-container">
+          <label class="toggle-label">
+            <span>Inspection Mode</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="inspection-toggle" />
+              <span class="slider"></span>
+            </label>
+          </label>
+        </div>
+        <p class="status-text" id="status-text">Click to activate</p>
+      </div>
+
+      <div class="preferences-section">
+        <h2>Preferences</h2>
+
+        <div class="preference-item">
+          <label class="preference-label">
+            <span>Color Theme</span>
+            <select id="color-theme" class="preference-select">
+              <option value="purple-pink">Purple → Pink</option>
+              <option value="blue">Blue</option>
+              <option value="green">Green</option>
+              <option value="orange">Orange</option>
+              <option value="red">Red</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="preference-item">
+          <label class="preference-label">
+            <span>Tooltip Font Size</span>
+            <div class="font-size-control">
+              <button id="font-size-decrease" class="size-btn">−</button>
+              <span id="font-size-value" class="size-value">12px</span>
+              <button id="font-size-increase" class="size-btn">+</button>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div class="quick-guide">
+        <h2>Quick Guide</h2>
+        <ul class="guide-list">
+          <li><strong>Hover:</strong> See properties in tooltip</li>
+          <li><strong>Click:</strong> Measure distance between elements</li>
+          <li><strong>Alt+Click:</strong> Open detailed panel</li>
+          <li><strong>Shortcut:</strong> <kbd>Cmd+Shift+P</kbd> to toggle</li>
+        </ul>
+      </div>
+    </div>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

@@ -1,0 +1,47 @@
+{
+  "manifest_version": 3,
+  "name": "Pixel Perfect Inspector",
+  "version": "1.0.0",
+  "description": "Inspect and extract CSS properties from DOM elements with pixel-perfect precision",
+  "permissions": ["activeTab", "storage", "scripting"],
+  "host_permissions": ["http://localhost/*", "https://*/*"],
+  "background": {
+    "service_worker": "background/service-worker.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    },
+    "default_title": "Pixel Perfect Inspector"
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://localhost/*", "https://*/*"],
+      "js": ["content/inspector.js"],
+      "css": ["content/overlay.css"]
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "commands": {
+    "toggle-inspection": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+P",
+        "mac": "Command+Shift+P"
+      },
+      "description": "Toggle inspection mode"
+    }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["icons/*.png"],
+      "matches": ["http://localhost/*", "https://*/*"]
+    }
+  ]
+}

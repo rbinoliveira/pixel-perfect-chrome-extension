@@ -1,0 +1,521 @@
+# PRD - Pixel Perfect Chrome Extension
+
+## 1. Visão Geral
+
+### 1.1 Resumo Executivo
+Extensão do Chrome para análise e extração de propriedades CSS de elementos em páginas web (foco inicial em localhost). A ferramenta permitirá que desenvolvedores e designers inspecionem visualmente propriedades de estilo de elementos DOM para garantir pixel-perfect implementation.
+
+### 1.2 Problema
+Desenvolvedores frequentemente precisam verificar se a implementação está fiel ao design, mas as ferramentas atuais (DevTools) requerem múltiplos cliques e navegação para obter informações completas de estilo. Não existe uma ferramenta dedicada que apresente de forma clara e visual todas as propriedades CSS relevantes de um elemento.
+
+### 1.3 Solução
+Uma extensão do Chrome que permite hover/click em elementos da página e exibe instantaneamente todas as propriedades CSS relevantes em um painel lateral ou overlay, com foco em tipografia, espaçamento e dimensões.
+
+---
+
+## 2. Objetivos
+
+### 2.1 Objetivos Principais
+- Facilitar a inspeção visual de propriedades CSS de elementos DOM
+- Reduzir o tempo necessário para verificar conformidade com designs
+- Prover uma interface intuitiva e não-intrusiva para desenvolvedores
+
+### 2.2 Objetivos Secundários
+- Permitir comparação de valores entre elementos
+- Exportar informações coletadas em formatos úteis (JSON, CSS)
+- Criar histórico de elementos inspecionados
+
+### 2.3 Métricas de Sucesso
+- Redução de 50% no tempo de verificação de propriedades CSS
+- Adoção por pelo menos 100 usuários nos primeiros 3 meses
+- Rating médio de 4+ estrelas na Chrome Web Store
+
+---
+
+## 3. Requisitos Funcionais
+
+### 3.1 Propriedades CSS a Extrair
+
+#### 3.1.1 Tipografia
+- `font-family`: Família de fonte aplicada
+- `font-size`: Tamanho da fonte (px, rem, em)
+- `font-weight`: Peso da fonte (100-900, bold, normal)
+- `line-height`: Altura da linha (unitless, px, %)
+- `letter-spacing`: Espaçamento entre letras (opcional)
+- `text-transform`: Transformação de texto (opcional)
+- `color`: Cor do texto
+
+#### 3.1.2 Espaçamento
+- `padding`: Padding interno (top, right, bottom, left)
+- `margin`: Margens externas (top, right, bottom, left)
+- `gap`: Gap em containers flex/grid
+
+#### 3.1.3 Dimensões
+- `width`: Largura (px, %, vw, auto)
+- `height`: Altura (px, %, vh, auto)
+- `min-width` / `max-width`: Dimensões mínimas/máximas (opcional)
+- `min-height` / `max-height`: Dimensões mínimas/máximas (opcional)
+
+#### 3.1.4 Bordas e Cantos
+- `border-radius`: Raio das bordas (px, %)
+- `border`: Propriedades de borda (width, style, color)
+
+#### 3.1.5 Layout (Bonus)
+- `display`: Tipo de display (block, flex, grid, etc)
+- `position`: Tipo de posicionamento
+- `flex-direction`: Direção do flex (se aplicável)
+- `justify-content`: Alinhamento horizontal (se aplicável)
+- `align-items`: Alinhamento vertical (se aplicável)
+
+### 3.2 Funcionalidades Core
+
+#### 3.2.1 Modo de Inspeção
+- **Ativar/Desativar**: Toggle para ativar modo de inspeção via ícone da extensão ou atalho de teclado
+- **Hover Highlighting**: Ao passar o mouse sobre elementos, destacar visualmente o elemento com overlay colorido
+- **Click to Inspect**: Clicar em um elemento para fixar a inspeção e exibir dados completos
+
+#### 3.2.2 Exibição de Dados
+- **Painel Lateral**: Exibir propriedades CSS em painel lateral fixo ou flutuante
+- **Categorização**: Organizar propriedades por categoria (Tipografia, Espaçamento, Dimensões, etc)
+- **Valores Computados**: Mostrar valores computados finais (não apenas valores declarados)
+- **Unidades**: Exibir valores nas unidades originais + conversão para px quando aplicável
+
+#### 3.2.3 Interações
+- **Copiar Valores**: Botão para copiar propriedade individual ou grupo de propriedades
+- **Exportar**: Exportar dados em formato JSON ou CSS
+- **Histórico**: Manter histórico dos últimos 10 elementos inspecionados na sessão atual
+
+### 3.3 Funcionalidades Avançadas (Fase 2)
+
+#### 3.3.1 Comparação
+- Selecionar múltiplos elementos para comparar propriedades lado a lado
+- Destacar diferenças entre elementos similares
+
+#### 3.3.2 Medição de Distâncias
+- Medir distância entre elementos (margin entre elementos)
+- Exibir régua visual ao passar mouse entre elementos
+
+#### 3.3.3 Persistência
+- Salvar elementos favoritos para referência futura
+- Sincronizar dados entre dispositivos (via Chrome Sync)
+
+---
+
+## 4. Requisitos Não-Funcionais
+
+### 4.1 Performance
+- Ativação do modo de inspeção em < 100ms
+- Extração de propriedades CSS em < 50ms por elemento
+- Overlay visual sem lag perceptível durante hover
+- Memória: < 50MB de uso de RAM
+
+### 4.2 Usabilidade
+- Interface intuitiva, sem necessidade de documentação
+- Atalhos de teclado para todas as ações principais
+- Tema claro/escuro para conforto visual
+- Responsive: funcionar em viewports de diferentes tamanhos
+
+### 4.3 Compatibilidade
+- **Navegadores**: Chrome v100+, Edge v100+
+- **Páginas**: Funcionar em localhost e páginas HTTPS
+- **Permissões**: Minimal permissions (activeTab, storage)
+
+### 4.4 Segurança
+- Não coletar ou transmitir dados de navegação do usuário
+- Não injetar scripts maliciosos ou rastreadores
+- Executar apenas quando explicitamente ativado pelo usuário
+
+### 4.5 Manutenibilidade
+- Código TypeScript com tipagem forte
+- Testes unitários para lógica de extração CSS
+- Documentação técnica completa
+- Build system automatizado (Vite/Webpack)
+
+---
+
+## 5. Especificações Técnicas
+
+### 5.1 Arquitetura
+
+#### 5.1.1 Componentes
+```
+pixel-perfect-extension/
+├── manifest.json           # Chrome Extension manifest V3
+├── background/
+│   └── service-worker.ts   # Background service worker
+├── content/
+│   ├── inspector.ts        # Lógica de inspeção de elementos
+│   ├── overlay.ts          # Overlay visual de highlight
+│   └── extractor.ts        # Extração de propriedades CSS
+├── popup/
+│   ├── popup.html          # Interface do popup da extensão
+│   ├── popup.ts            # Lógica do popup
+│   └── popup.css           # Estilos do popup
+├── panel/
+│   ├── panel.html          # Painel lateral de dados
+│   ├── panel.ts            # Lógica do painel
+│   └── panel.css           # Estilos do painel
+└── shared/
+    ├── types.ts            # TypeScript types/interfaces
+    ├── utils.ts            # Funções utilitárias
+    └── constants.ts        # Constantes globais
+```
+
+#### 5.1.2 Tecnologias
+- **Linguagem**: TypeScript 5+
+- **Framework**: Vanilla JS/TS ou React (para painel complexo)
+- **Build Tool**: Vite ou Webpack 5
+- **Styling**: CSS Modules ou Tailwind CSS
+- **Storage**: Chrome Storage API
+- **Manifest**: V3 (manifest_version: 3)
+
+### 5.2 APIs e Integrações
+
+#### 5.2.1 Chrome Extension APIs
+- `chrome.tabs`: Gerenciar tabs ativos
+- `chrome.storage`: Persistir configurações e histórico
+- `chrome.runtime`: Comunicação entre components
+- `chrome.scripting`: Injetar content scripts
+
+#### 5.2.2 Web APIs
+- `getComputedStyle()`: Obter estilos computados
+- `getBoundingClientRect()`: Obter dimensões e posição
+- `MutationObserver`: Detectar mudanças no DOM (opcional)
+
+### 5.3 Estrutura de Dados
+
+#### 5.3.1 Elemento Inspecionado
+```typescript
+interface InspectedElement {
+  id: string;                    // Unique ID gerado
+  timestamp: number;             // Unix timestamp
+  selector: string;              // CSS selector do elemento
+  tagName: string;               // Tag HTML (div, span, etc)
+  className: string;             // Classes CSS
+  properties: CSSProperties;     // Propriedades extraídas
+  position: ElementPosition;     // Posição na página
+}
+
+interface CSSProperties {
+  typography: Typography;
+  spacing: Spacing;
+  dimensions: Dimensions;
+  borders: Borders;
+  layout?: Layout;               // Opcional
+}
+
+interface Typography {
+  fontFamily: string;
+  fontSize: { value: number; unit: string; };
+  fontWeight: string | number;
+  lineHeight: { value: number; unit: string; };
+  color: string;                 // RGB/Hex
+  letterSpacing?: string;
+  textTransform?: string;
+}
+
+interface Spacing {
+  padding: {
+    top: string;
+    right: string;
+    bottom: string;
+    left: string;
+  };
+  margin: {
+    top: string;
+    right: string;
+    bottom: string;
+    left: string;
+  };
+  gap?: string;
+}
+
+interface Dimensions {
+  width: { value: number; unit: string; computed: number; };
+  height: { value: number; unit: string; computed: number; };
+  minWidth?: string;
+  maxWidth?: string;
+  minHeight?: string;
+  maxHeight?: string;
+}
+
+interface Borders {
+  borderRadius: {
+    topLeft: string;
+    topRight: string;
+    bottomRight: string;
+    bottomLeft: string;
+  };
+  border: {
+    width: string;
+    style: string;
+    color: string;
+  };
+}
+
+interface Layout {
+  display: string;
+  position: string;
+  flexDirection?: string;
+  justifyContent?: string;
+  alignItems?: string;
+}
+
+interface ElementPosition {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+```
+
+---
+
+## 6. Casos de Uso
+
+### 6.1 Caso de Uso #1: Verificação de Tipografia
+**Ator**: Desenvolvedor Frontend
+**Objetivo**: Verificar se a tipografia implementada corresponde ao design
+
+**Fluxo**:
+1. Desenvolvedor abre página localhost com implementação
+2. Clica no ícone da extensão para ativar modo de inspeção
+3. Passa o mouse sobre título/texto
+4. Elemento é destacado com overlay visual
+5. Clica no elemento
+6. Painel lateral exibe todas as propriedades de tipografia
+7. Desenvolvedor compara com design (Figma/Sketch)
+8. Identifica discrepância em font-weight (400 vs 500)
+9. Copia valor correto do painel
+10. Ajusta no código CSS
+
+**Resultado**: Tipografia corrigida em 30 segundos vs 2-3 minutos com DevTools
+
+### 6.2 Caso de Uso #2: Análise de Espaçamento
+**Ator**: Designer de UI
+**Objetivo**: Validar espaçamentos e margens entre componentes
+
+**Fluxo**:
+1. Designer abre página de componentes em localhost
+2. Ativa extensão e modo de inspeção
+3. Clica em card component
+4. Visualiza padding interno (24px em todos os lados)
+5. Inspeciona elemento adjacente
+6. Visualiza margin entre elementos (16px)
+7. Confirma que está conforme design system (8px grid)
+8. Exporta dados para documentação
+
+**Resultado**: Validação rápida sem necessidade de DevTools
+
+### 6.3 Caso de Uso #3: Debug de Layout
+**Ator**: Desenvolvedor
+**Objetivo**: Identificar por que elemento não está se comportando como esperado
+
+**Fluxo**:
+1. Desenvolvedor nota que botão está com dimensões incorretas
+2. Ativa extensão e inspeciona botão
+3. Vê que width está como 'auto' em vez de valor fixo
+4. Vê que padding horizontal está 12px vs esperado 16px
+5. Identifica border-radius como 4px vs esperado 8px
+6. Corrige valores no código
+
+**Resultado**: Debug rápido de múltiplas propriedades simultaneamente
+
+---
+
+## 7. Interface do Usuário
+
+### 7.1 Popup da Extensão (Extension Icon Click)
+```
+┌─────────────────────────────────┐
+│  Pixel Perfect Inspector        │
+│                                 │
+│  ◉ Inspection Mode: OFF         │
+│  [Toggle ON]                    │
+│                                 │
+│  ⚙️ Settings                     │
+│  📊 View History                 │
+│  📤 Export Session               │
+│                                 │
+│  Keyboard Shortcuts:            │
+│  • Ctrl+Shift+I - Toggle Mode   │
+│  • Ctrl+Shift+C - Copy Props    │
+│                                 │
+└─────────────────────────────────┘
+```
+
+### 7.2 Overlay Visual (Hover State)
+- Border colorido ao redor do elemento (ex: azul #007AFF, 2px solid)
+- Tooltip pequeno acima do elemento mostrando tag + dimensões
+- Exemplo: `<div> 320x240px`
+
+### 7.3 Painel Lateral (Element Selected)
+```
+┌─────────────────────────────────────────┐
+│  Element: <div class="card-title">     │
+│  ✕ Close                                │
+├─────────────────────────────────────────┤
+│                                         │
+│  📝 TYPOGRAPHY                          │
+│  ├─ Font Family: Inter, sans-serif     │
+│  ├─ Font Size: 16px (1rem)        [📋] │
+│  ├─ Font Weight: 600              [📋] │
+│  ├─ Line Height: 24px (1.5)       [📋] │
+│  └─ Color: #1a1a1a               [📋] │
+│                                         │
+│  📏 DIMENSIONS                          │
+│  ├─ Width: 320px                  [📋] │
+│  ├─ Height: 48px                  [📋] │
+│  └─ Computed: 320 × 48px               │
+│                                         │
+│  📦 SPACING                             │
+│  ├─ Padding: 12px 16px            [📋] │
+│  ├─ Margin: 0 0 16px 0            [📋] │
+│  └─ Gap: —                             │
+│                                         │
+│  🔲 BORDERS                             │
+│  ├─ Border Radius: 8px            [📋] │
+│  └─ Border: 1px solid #e5e5e5     [📋] │
+│                                         │
+│  [Copy All Properties]                  │
+│  [Export as JSON]  [Export as CSS]     │
+│                                         │
+└─────────────────────────────────────────┘
+```
+
+### 7.4 Temas
+- **Light Mode**: Fundo branco, texto escuro, acentos azuis
+- **Dark Mode**: Fundo escuro (#1e1e1e), texto claro, acentos azuis claros
+- **Auto**: Seguir preferência do sistema operacional
+
+---
+
+## 8. Roadmap e Fases
+
+### 8.1 Fase 1 - MVP (Semanas 1-4)
+**Objetivo**: Extensão funcional básica com core features
+
+**Tarefas**:
+- [ ] Setup do projeto (TypeScript, Vite, estrutura de pastas)
+- [ ] Manifest V3 configuration
+- [ ] Content script: Implementar modo de inspeção e overlay
+- [ ] Content script: Extrator de propriedades CSS
+- [ ] Painel lateral: UI básica para exibir propriedades
+- [ ] Popup: Interface de controle (toggle on/off)
+- [ ] Funcionalidade de copiar propriedades individuais
+- [ ] Teste em localhost
+- [ ] Documentação básica (README)
+
+**Entregável**: Extensão instalável que permite inspecionar elementos e ver propriedades CSS básicas
+
+### 8.2 Fase 2 - Polimento e Exportação (Semanas 5-6)
+**Objetivo**: Melhorar UX e adicionar funcionalidades de exportação
+
+**Tarefas**:
+- [ ] Implementar histórico de elementos inspecionados
+- [ ] Funcionalidade de exportação (JSON, CSS)
+- [ ] Copiar múltiplas propriedades de uma vez
+- [ ] Temas (Light/Dark mode)
+- [ ] Melhorias visuais no overlay e painel
+- [ ] Atalhos de teclado
+- [ ] Persistência de configurações (Chrome Storage)
+- [ ] Testes manuais extensivos
+
+**Entregável**: Extensão robusta com UX polida e funcionalidades de produtividade
+
+### 8.3 Fase 3 - Funcionalidades Avançadas (Semanas 7-8)
+**Objetivo**: Adicionar features diferenciadas
+
+**Tarefas**:
+- [ ] Comparação de elementos lado a lado
+- [ ] Medição de distâncias entre elementos
+- [ ] Visualização de régua/guias
+- [ ] Detecção automática de inconsistências
+- [ ] Suporte para elementos complexos (pseudo-elements)
+- [ ] Performance optimization
+- [ ] Testes automatizados (Jest/Vitest)
+
+**Entregável**: Extensão completa com features avançadas
+
+### 8.4 Fase 4 - Publicação e Marketing (Semana 9+)
+**Objetivo**: Lançar na Chrome Web Store
+
+**Tarefas**:
+- [ ] Preparar assets para Chrome Web Store (ícones, screenshots, vídeo)
+- [ ] Escrever descrição detalhada e marketing copy
+- [ ] Criar página de documentação/website
+- [ ] Submeter para Chrome Web Store
+- [ ] Processo de review e ajustes
+- [ ] Lançamento oficial
+- [ ] Divulgação (Product Hunt, Reddit, Twitter, etc)
+- [ ] Coletar feedback inicial
+
+**Entregável**: Extensão publicada e disponível para download
+
+---
+
+## 9. Riscos e Mitigações
+
+### 9.1 Riscos Técnicos
+
+| Risco | Probabilidade | Impacto | Mitigação |
+|-------|---------------|---------|-----------|
+| Performance ruim em páginas complexas | Média | Alto | Implementar debouncing, lazy loading, otimizar queries DOM |
+| Incompatibilidade com sites específicos | Alta | Médio | Testes extensivos, fallback gracioso, whitelist/blacklist |
+| Conflito com outras extensões | Baixa | Médio | Namespace único, event handling cuidadoso |
+| Mudanças na API do Chrome | Baixa | Alto | Seguir best practices, monitorar changelog do Chrome |
+
+### 9.2 Riscos de Produto
+
+| Risco | Probabilidade | Impacto | Mitigação |
+|-------|---------------|---------|-----------|
+| Baixa adoção de usuários | Média | Alto | Marketing efetivo, UX excelente, resolver dor real |
+| Feedback negativo sobre UX | Média | Médio | Testes com usuários beta, iteração rápida |
+| Concorrência de ferramentas similares | Alta | Médio | Diferenciação clara, features únicas |
+
+---
+
+## 10. Critérios de Sucesso
+
+### 10.1 Critérios de Lançamento (MVP)
+- ✅ Extensão instalável sem erros
+- ✅ Modo de inspeção funcional (ativar/desativar)
+- ✅ Overlay visual sem bugs visuais
+- ✅ Extração de pelo menos 10 propriedades CSS core
+- ✅ Painel lateral renderiza dados corretamente
+- ✅ Funcionalidade de copiar valores funcional
+- ✅ Testado em Chrome v120+ em macOS/Windows/Linux
+- ✅ README com instruções de instalação
+
+### 10.2 Critérios de Sucesso Pós-Lançamento (3 meses)
+- 📊 100+ usuários ativos semanais
+- ⭐ Rating médio de 4.0+ na Chrome Web Store
+- 💬 Pelo menos 10 reviews positivos
+- 📈 Taxa de retenção de 40%+ (usuários que voltam após primeira semana)
+- 🐛 < 5 bugs críticos reportados
+
+---
+
+## 11. Apêndices
+
+### 11.1 Referências
+- [Chrome Extension Docs - Manifest V3](https://developer.chrome.com/docs/extensions/mv3/)
+- [Chrome Extension Samples](https://github.com/GoogleChrome/chrome-extensions-samples)
+- [getComputedStyle() - MDN](https://developer.mozilla.org/en-US/docs/Web/API/Window/getComputedStyle)
+
+### 11.2 Glossário
+- **Content Script**: Script que roda no contexto da página web
+- **Service Worker**: Background script que gerencia eventos da extensão
+- **Manifest V3**: Versão mais recente da especificação de extensões do Chrome
+- **Computed Style**: Valores finais de CSS após cascade, herança e cálculos
+
+### 11.3 Perguntas Abertas
+1. Devemos suportar Shadow DOM?
+2. Qual o formato ideal de exportação para designers? (JSON, CSS, outro?)
+3. Devemos permitir customização de quais propriedades exibir?
+4. Integração com Figma/Sketch via API vale a pena no MVP?
+
+---
+
+## Changelog
+- **2025-12-10**: Documento criado (v1.0)

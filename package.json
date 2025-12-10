@@ -1,0 +1,31 @@
+{
+  "name": "pixel-perfect-chrome-extension",
+  "version": "1.0.0",
+  "description": "Inspect and extract CSS properties from DOM elements with pixel-perfect precision",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "npm run build:bundle && npm run build:copy",
+    "build:bundle": "node scripts/build-bundle.js",
+    "build:copy": "node scripts/copy-assets.js",
+    "build:test": "npm run build && echo '✅ Build completo! Carregue a pasta dist/ no Chrome'",
+    "watch": "vite build --watch",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "chrome-extension",
+    "css",
+    "inspector",
+    "pixel-perfect"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/chrome": "^0.1.32",
+    "esbuild": "^0.27.1",
+    "sharp": "^0.34.5",
+    "typescript": "^5.9.3",
+    "vite": "^7.2.7",
+    "vite-plugin-web-extension": "^4.5.0"
+  }
+}

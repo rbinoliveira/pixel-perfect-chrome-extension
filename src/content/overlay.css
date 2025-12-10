@@ -1,0 +1,9 @@
+/* Additional overlay styles if needed */
+#pixel-perfect-overlay {
+  transition: none;
+}
+
+#pixel-perfect-tooltip {
+  user-select: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
