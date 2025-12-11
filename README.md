@@ -1,5 +1,16 @@
 # Pixel Perfect Inspector
 
+<div align="center">
+
+![Chrome Extension](https://img.shields.io/badge/Chrome-Extension-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
+![Manifest V3](https://img.shields.io/badge/Manifest-V3-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white)
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)
+
+**Inspect and extract CSS properties from DOM elements with pixel-perfect precision**
+
+</div>
+
 A Chrome extension for inspecting and extracting CSS properties from DOM elements with pixel-perfect precision. Perfect for developers ensuring accurate design implementations, designers checking spacing and typography, and anyone learning CSS.
 
 ## 📸 Screenshots
@@ -53,8 +64,6 @@ npm run build
 ```
 
 ## 📖 Usage
-
-> 📘 **For detailed usage instructions, see [USAGE.md](USAGE.md)**
 
 ### Quick Start
 1. **Activate Inspection Mode**
@@ -250,4 +259,10 @@ See [CHANGELOG.md](CHANGELOG.md) for version history and updates.
 
 ---
 
+<div align="center">
+
 Made with ❤️ for the web development community
+
+[🐛 Report Bug](https://github.com/yourusername/pixel-perfect-chrome-extension/issues) • [💡 Request Feature](https://github.com/yourusername/pixel-perfect-chrome-extension/issues) • [📊 Changelog](CHANGELOG.md)
+
+</div>
