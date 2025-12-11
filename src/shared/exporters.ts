@@ -1,5 +1,9 @@
 import { InspectedElement, CSSProperties } from './types';
 
+// ============================================================
+// DATA EXPORTER
+// ============================================================
+
 export class DataExporter {
   static toJSON(element: InspectedElement): string {
     return JSON.stringify(element, null, 2);
@@ -11,7 +15,6 @@ export class DataExporter {
 
     lines.push(`${element.selector} {`);
 
-    // Typography
     const t = properties.typography;
     lines.push(`  font-family: ${t.fontFamily};`);
     lines.push(`  font-size: ${t.fontSize.value}${t.fontSize.unit};`);
@@ -21,14 +24,12 @@ export class DataExporter {
     if (t.letterSpacing) lines.push(`  letter-spacing: ${t.letterSpacing};`);
     if (t.textTransform) lines.push(`  text-transform: ${t.textTransform};`);
 
-    // Dimensions
     const d = properties.dimensions;
     lines.push(`  width: ${d.width.value}${d.width.unit};`);
     lines.push(`  height: ${d.height.value}${d.height.unit};`);
     if (d.minWidth) lines.push(`  min-width: ${d.minWidth};`);
     if (d.maxWidth) lines.push(`  max-width: ${d.maxWidth};`);
 
-    // Spacing
     const s = properties.spacing;
     const padding = this.formatSpacingForCSS('padding', s.padding);
     const margin = this.formatSpacingForCSS('margin', s.margin);
@@ -36,7 +37,6 @@ export class DataExporter {
     lines.push(`  ${margin}`);
     if (s.gap) lines.push(`  gap: ${s.gap};`);
 
-    // Borders
     const b = properties.borders;
     if (this.isUniformBorderRadius(b.borderRadius)) {
       lines.push(`  border-radius: ${b.borderRadius.topLeft};`);
@@ -47,7 +47,6 @@ export class DataExporter {
     }
     lines.push(`  border: ${b.border.width} ${b.border.style} ${b.border.color};`);
 
-    // Layout
     if (properties.layout) {
       const l = properties.layout;
       lines.push(`  display: ${l.display};`);
@@ -60,6 +59,10 @@ export class DataExporter {
     lines.push('}');
     return lines.join('\n');
   }
+
+  // ============================================================
+  // HELPERS
+  // ============================================================
 
   private static formatSpacingForCSS(property: string, spacing: any): string {
     const { top, right, bottom, left } = spacing;

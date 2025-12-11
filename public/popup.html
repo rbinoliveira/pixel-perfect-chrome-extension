@@ -29,16 +29,22 @@
         <h2>Preferences</h2>
 
         <div class="preference-item">
-          <label class="preference-label">
-            <span>Color Theme</span>
-            <select id="color-theme" class="preference-select">
-              <option value="purple-pink">Purple → Pink</option>
-              <option value="blue">Blue</option>
-              <option value="green">Green</option>
-              <option value="orange">Orange</option>
-              <option value="red">Red</option>
-            </select>
-          </label>
+          <div class="preference-label-vertical">
+            <span>Overlay Color</span>
+            <small class="preference-hint">Choose your overlay color</small>
+          </div>
+          <div class="color-picker">
+            <div class="color-option" data-color="purple" title="Purple"></div>
+            <div class="color-option" data-color="blue" title="Blue"></div>
+            <div class="color-option" data-color="cyan" title="Cyan"></div>
+            <div class="color-option" data-color="teal" title="Teal"></div>
+            <div class="color-option" data-color="green" title="Green"></div>
+            <div class="color-option" data-color="orange" title="Orange"></div>
+            <div class="color-option" data-color="red" title="Red"></div>
+            <div class="color-option" data-color="pink" title="Pink"></div>
+            <div class="color-option" data-color="indigo" title="Indigo"></div>
+            <div class="color-option" data-color="amber" title="Amber"></div>
+          </div>
         </div>
 
         <div class="preference-item">
@@ -58,7 +64,6 @@
         <ul class="guide-list">
           <li><strong>Hover:</strong> See properties in tooltip</li>
           <li><strong>Click:</strong> Measure distance between elements</li>
-          <li><strong>Alt+Click:</strong> Open detailed panel</li>
           <li><strong>Shortcut:</strong> <kbd>Cmd+Shift+P</kbd> to toggle</li>
         </ul>
       </div>

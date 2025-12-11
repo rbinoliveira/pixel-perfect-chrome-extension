@@ -4,16 +4,11 @@ import { PanelRenderer } from '../panel/panel';
 import { InspectedElement } from '../shared/types';
 import { ClipboardManager } from '../shared/clipboard';
 import { DataExporter } from '../shared/exporters';
-import { SECONDARY_COLOR, TERTIARY_COLOR } from '../shared/constants';
+import { getCurrentTheme, getOverlayColor } from '../shared/constants';
 
-// Color themes
-const COLOR_THEMES: { [key: string]: { primary: string; secondary: string; tertiary: string } } = {
-  'purple-pink': { primary: '#8B5CF6', secondary: '#EC4899', tertiary: '#10B981' },
-  'blue': { primary: '#3B82F6', secondary: '#60A5FA', tertiary: '#10B981' },
-  'green': { primary: '#10B981', secondary: '#34D399', tertiary: '#10B981' },
-  'orange': { primary: '#F59E0B', secondary: '#FBBF24', tertiary: '#10B981' },
-  'red': { primary: '#EF4444', secondary: '#F87171', tertiary: '#10B981' }
-};
+// ============================================================
+// PIXEL PERFECT INSPECTOR
+// ============================================================
 
 class PixelPerfectInspector {
   private extractor: CSSExtractor;
@@ -27,8 +22,8 @@ class PixelPerfectInspector {
   private measurementLine: HTMLDivElement | null = null;
   private panelOpen = false;
   private currentInspectedElement: InspectedElement | null = null;
-  private preferences: { colorTheme: string; tooltipFontSize: number } = {
-    colorTheme: 'purple-pink',
+  private preferences: { overlayColor: string; tooltipFontSize: number } = {
+    overlayColor: 'purple',
     tooltipFontSize: 12
   };
 
@@ -40,13 +35,15 @@ class PixelPerfectInspector {
     this.loadPreferences();
   }
 
+  // ============================================================
+  // MESSAGE HANDLING
+  // ============================================================
+
   private setupMessageListener() {
     try {
       chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         try {
-          console.log('[Content Script] Message received:', message);
           if (message.action === 'toggleInspection') {
-            console.log('[Content Script] Toggling inspection:', message.enabled);
             this.toggle(message.enabled);
             sendResponse({ success: true });
           } else if (message.action === 'getInspectionState') {
@@ -56,10 +53,9 @@ class PixelPerfectInspector {
             this.applyPreferences();
             sendResponse({ success: true });
           } else if (message.action === 'loadHistoryItem') {
-            // Will be implemented when history feature is added
             sendResponse({ success: false });
           }
-          return true; // Keep channel open for async response
+          return true;
         } catch (error) {
           console.error('[Content Script] Error handling message:', error);
           sendResponse({ success: false, error: error.message });
@@ -68,13 +64,14 @@ class PixelPerfectInspector {
       });
     } catch (error) {
       console.error('[Content Script] Failed to setup message listener:', error);
-      // If context is invalidated, we can't set up listeners, but that's okay
-      // The extension will need to be reloaded
     }
   }
 
+  // ============================================================
+  // INSPECTION MODE CONTROL
+  // ============================================================
+
   toggle(enabled: boolean) {
-    console.log('[Content Script] Toggle called, enabled:', enabled);
     this.isEnabled = enabled;
 
     if (enabled) {
@@ -85,13 +82,12 @@ class PixelPerfectInspector {
   }
 
   private enable() {
-    console.log('[Content Script] Enabling inspection mode');
     this.overlay.activate();
     this.showActiveIndicator();
     document.addEventListener('mousemove', this.handleMouseMove);
     document.addEventListener('click', this.handleClick, true);
+    document.addEventListener('keydown', this.handleKeyDown, true);
     document.body.style.cursor = 'crosshair';
-    console.log('[Content Script] Inspection mode enabled');
   }
 
   private disable() {
@@ -99,8 +95,87 @@ class PixelPerfectInspector {
     this.hideActiveIndicator();
     document.removeEventListener('mousemove', this.handleMouseMove);
     document.removeEventListener('click', this.handleClick, true);
+    document.removeEventListener('keydown', this.handleKeyDown, true);
     document.body.style.cursor = '';
     this.resetMeasurement();
+  }
+
+  // ============================================================
+  // EVENT HANDLERS
+  // ============================================================
+
+  private handleKeyDown = (event: KeyboardEvent) => {
+    if (event.key === 'Escape' && this.isEnabled) {
+      event.preventDefault();
+      event.stopPropagation();
+      this.toggle(false);
+      this.showExitFeedback();
+    }
+  };
+
+  private handleMouseMove = (event: MouseEvent) => {
+    if (!this.isEnabled) return;
+
+    const target = event.target as HTMLElement;
+
+    if (target.id?.startsWith('pixel-perfect-')) return;
+
+    this.currentElement = target;
+    this.overlay.showOnElement(target);
+  };
+
+  private handleClick = (event: MouseEvent) => {
+    if (!this.isEnabled || !this.currentElement) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    this.handleMeasurementClick(this.currentElement);
+  };
+
+  // ============================================================
+  // VISUAL FEEDBACK
+  // ============================================================
+
+  private showExitFeedback() {
+    const feedback = document.createElement('div');
+    feedback.textContent = 'Inspection mode deactivated (ESC)';
+    feedback.style.cssText = `
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(16, 185, 129, 0.95);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      z-index: 2147483647;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      animation: pixelPerfectFadeOut 2s forwards;
+    `;
+
+    // Add keyframe animation
+    if (!document.getElementById('pixel-perfect-animations')) {
+      const style = document.createElement('style');
+      style.id = 'pixel-perfect-animations';
+      style.textContent = `
+        @keyframes pixelPerfectFadeOut {
+          0% { opacity: 1; }
+          70% { opacity: 1; }
+          100% { opacity: 0; }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    document.body.appendChild(feedback);
+
+    setTimeout(() => {
+      feedback.remove();
+    }, 2000);
   }
 
   private showActiveIndicator() {
@@ -150,66 +225,25 @@ class PixelPerfectInspector {
     }
   }
 
-  private handleMouseMove = (event: MouseEvent) => {
-    if (!this.isEnabled) return;
-
-    const target = event.target as HTMLElement;
-
-    // Ignore our own overlay elements
-    if (target.id?.startsWith('pixel-perfect-')) return;
-
-    this.currentElement = target;
-    this.overlay.showOnElement(target);
-  };
-
-  private handleClick = (event: MouseEvent) => {
-    if (!this.isEnabled || !this.currentElement) return;
-
-    // Prevent default action
-    event.preventDefault();
-    event.stopPropagation();
-
-    // Alt/Option + Click: Open panel with detailed properties
-    if (event.altKey) {
-      const inspectedElement = this.extractor.createInspectedElement(this.currentElement);
-
-      // Save to history
-      chrome.runtime.sendMessage({
-        action: 'saveInspectedElement',
-        element: inspectedElement
-      });
-
-      // Open panel
-      this.openPanel(inspectedElement);
-
-      // Disable inspection mode after opening panel
-      this.toggle(false);
-      chrome.runtime.sendMessage({ action: 'disableInspection' });
-    } else {
-      // Click (without Alt): Enter measurement mode
-      this.handleMeasurementClick(this.currentElement);
-    }
-  };
+  // ============================================================
+  // MEASUREMENT MODE
+  // ============================================================
 
   private handleMeasurementClick(element: HTMLElement) {
     if (!this.firstElement) {
-      // First element selected
       this.firstElement = element;
       this.measurementMode = true;
       this.highlightElementForMeasurement(element, true);
       this.showMeasurementHint('First element selected. Click on second element to measure');
     } else if (this.firstElement !== element) {
-      // Second element selected - calculate distance
       this.secondElement = element;
       this.highlightElementForMeasurement(element, true);
       this.calculateAndShowDistance(this.firstElement, this.secondElement);
 
-      // Reset after 3 seconds
       setTimeout(() => {
         this.resetMeasurement();
       }, 3000);
     } else {
-      // Clicked same element - reset
       this.resetMeasurement();
     }
   }
@@ -219,6 +253,11 @@ class PixelPerfectInspector {
     const scrollX = window.scrollX;
     const scrollY = window.scrollY;
 
+    // Get current theme colors
+    const theme = getCurrentTheme();
+    const greenColor = getOverlayColor('green', theme);
+    const pinkColor = getOverlayColor('pink', theme);
+
     // Create or update highlight
     let highlight = document.getElementById('pixel-perfect-measure-highlight');
     if (!highlight) {
@@ -227,7 +266,7 @@ class PixelPerfectInspector {
       highlight.style.cssText = `
         position: absolute;
         pointer-events: none;
-        border: 2px solid ${isSelected ? TERTIARY_COLOR : SECONDARY_COLOR};
+        border: 2px solid ${isSelected ? greenColor.value : pinkColor.value};
         z-index: 2147483646;
         box-sizing: border-box;
       `;
@@ -239,7 +278,7 @@ class PixelPerfectInspector {
     highlight.style.top = `${rect.top + scrollY}px`;
     highlight.style.width = `${rect.width}px`;
     highlight.style.height = `${rect.height}px`;
-      highlight.style.borderColor = isSelected ? TERTIARY_COLOR : SECONDARY_COLOR;
+    highlight.style.borderColor = isSelected ? greenColor.value : pinkColor.value;
   }
 
   private calculateAndShowDistance(element1: HTMLElement, element2: HTMLElement) {
@@ -602,24 +641,30 @@ class PixelPerfectInspector {
     if (hint) hint.remove();
   }
 
+  // ============================================================
+  // PREFERENCES
+  // ============================================================
+
   private loadPreferences() {
-    // Load preferences from chrome.storage.local
     chrome.storage.local.get(['preferences'], (result) => {
       if (result.preferences) {
-        this.preferences = result.preferences;
+        this.preferences = {
+          overlayColor: result.preferences.overlayColor || 'purple',
+          tooltipFontSize: result.preferences.tooltipFontSize || 12
+        };
         this.applyPreferences();
       }
     });
   }
 
   private applyPreferences() {
-    // Apply color theme
-    const theme = COLOR_THEMES[this.preferences.colorTheme] || COLOR_THEMES['purple-pink'];
-    this.overlay.updateColors(theme.primary, theme.secondary, theme.tertiary);
-
-    // Apply font size
+    this.overlay.updateColorSelection(this.preferences.overlayColor);
     this.overlay.updateFontSize(this.preferences.tooltipFontSize);
   }
+
+  // ============================================================
+  // PANEL MANAGEMENT
+  // ============================================================
 
   private openPanel(element: InspectedElement) {
     this.currentInspectedElement = element;
@@ -727,7 +772,6 @@ class PixelPerfectInspector {
   }
 
   private showContextInvalidatedMessage() {
-    // Remove existing message if any
     const existing = document.getElementById('pixel-perfect-context-error');
     if (existing) existing.remove();
 
@@ -755,12 +799,14 @@ class PixelPerfectInspector {
     `;
     document.body.appendChild(message);
 
-    // Auto-remove after 5 seconds
     setTimeout(() => {
       message.remove();
     }, 5000);
   }
 }
 
-// Initialize inspector
+// ============================================================
+// INIT
+// ============================================================
+
 const inspector = new PixelPerfectInspector();

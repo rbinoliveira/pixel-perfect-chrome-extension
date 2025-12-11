@@ -1,28 +1,44 @@
+// ============================================================
+// POPUP CONTROLLER
+// ============================================================
+
 class PopupController {
   private inspectionToggle: HTMLInputElement;
   private statusText: HTMLElement;
   private historyList: HTMLElement;
-  private colorThemeSelect: HTMLSelectElement;
+  private colorOptions: NodeListOf<Element>;
   private fontSizeValue: HTMLElement;
   private fontSizeDecrease: HTMLButtonElement;
   private fontSizeIncrease: HTMLButtonElement;
   private currentFontSize: number = 12;
+  private currentTheme: 'light' | 'dark' = 'light';
+  private currentColor: string = 'purple';
+  private darkModeMediaQuery: MediaQueryList | null = null;
 
   constructor() {
-    this.inspectionToggle = document.getElementById(
-      'inspection-toggle'
-    ) as HTMLInputElement;
+    this.inspectionToggle = document.getElementById('inspection-toggle') as HTMLInputElement;
     this.statusText = document.getElementById('status-text') as HTMLElement;
     this.historyList = document.getElementById('history-list') as HTMLElement;
-    this.colorThemeSelect = document.getElementById('color-theme') as HTMLSelectElement;
+    this.colorOptions = document.querySelectorAll('.color-option');
     this.fontSizeValue = document.getElementById('font-size-value') as HTMLElement;
     this.fontSizeDecrease = document.getElementById('font-size-decrease') as HTMLButtonElement;
     this.fontSizeIncrease = document.getElementById('font-size-increase') as HTMLButtonElement;
     this.init();
   }
 
+  // ============================================================
+  // INITIALIZATION
+  // ============================================================
+
   async init() {
-    // Get current inspection state
+    this.setupThemeDetection();
+    await this.syncInspectionState();
+    this.setupEventListeners();
+    await this.loadPreferences();
+    this.loadHistory();
+  }
+
+  private async syncInspectionState() {
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
     if (tabs[0]?.id) {
       chrome.tabs.sendMessage(
@@ -30,7 +46,6 @@ class PopupController {
         { action: 'getInspectionState' },
         (response) => {
           if (chrome.runtime.lastError) {
-            // Content script not loaded yet, that's okay
             return;
           }
           if (response?.enabled) {
@@ -40,24 +55,51 @@ class PopupController {
         }
       );
     }
+  }
 
-    // Setup event listeners
-    this.inspectionToggle.addEventListener('change', () =>
-      this.handleToggle()
-    );
-    document
-      .getElementById('clear-history')
-      ?.addEventListener('click', () => this.clearHistory());
+  private setupEventListeners() {
+    this.inspectionToggle.addEventListener('change', () => this.handleToggle());
+    document.getElementById('clear-history')?.addEventListener('click', () => this.clearHistory());
 
-    // Setup preferences event listeners
-    this.colorThemeSelect.addEventListener('change', () => this.handleColorThemeChange());
+    this.colorOptions.forEach(option => {
+      option.addEventListener('click', () => this.handleColorChange(option));
+    });
+
     this.fontSizeDecrease.addEventListener('click', () => this.handleFontSizeChange(-1));
     this.fontSizeIncrease.addEventListener('click', () => this.handleFontSizeChange(1));
-
-    // Load preferences and history
-    this.loadPreferences();
-    this.loadHistory();
   }
+
+  // ============================================================
+  // THEME MANAGEMENT
+  // ============================================================
+
+  setupThemeDetection() {
+    this.currentTheme = this.detectSystemTheme();
+    this.applyTheme(this.currentTheme);
+
+    if (window.matchMedia) {
+      this.darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      this.darkModeMediaQuery.addEventListener('change', (e) => {
+        this.currentTheme = e.matches ? 'dark' : 'light';
+        this.applyTheme(this.currentTheme);
+      });
+    }
+  }
+
+  detectSystemTheme(): 'light' | 'dark' {
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      return 'dark';
+    }
+    return 'light';
+  }
+
+  applyTheme(theme: 'light' | 'dark') {
+    document.documentElement.setAttribute('data-theme', theme);
+  }
+
+  // ============================================================
+  // INSPECTION CONTROLS
+  // ============================================================
 
   async handleToggle() {
     const enabled = this.inspectionToggle.checked;
@@ -69,7 +111,6 @@ class PopupController {
         { action: 'toggleInspection', enabled },
         (response) => {
           if (chrome.runtime.lastError) {
-            // Content script not loaded, need to inject it
             console.log('Content script not available');
           }
         }
@@ -88,38 +129,98 @@ class PopupController {
     }
   }
 
+  // ============================================================
+  // PREFERENCES
+  // ============================================================
+
+  async loadPreferences() {
+    const result = await chrome.storage.local.get(['preferences']);
+    const preferences = result.preferences || {
+      overlayColor: 'purple',
+      tooltipFontSize: 12
+    };
+
+    this.currentColor = preferences.overlayColor || 'purple';
+    this.currentFontSize = preferences.tooltipFontSize || 12;
+    this.fontSizeValue.textContent = `${this.currentFontSize}px`;
+
+    this.colorOptions.forEach(option => {
+      const colorName = option.getAttribute('data-color');
+      if (colorName === this.currentColor) {
+        option.classList.add('selected');
+      }
+    });
+  }
+
+  handleColorChange(selectedOption: Element) {
+    const colorName = selectedOption.getAttribute('data-color');
+    if (!colorName) return;
+
+    this.colorOptions.forEach(option => option.classList.remove('selected'));
+    selectedOption.classList.add('selected');
+
+    this.currentColor = colorName;
+
+    this.savePreferences({
+      overlayColor: colorName,
+      tooltipFontSize: this.currentFontSize
+    });
+  }
+
+  handleFontSizeChange(delta: number) {
+    this.currentFontSize = Math.max(10, Math.min(20, this.currentFontSize + delta));
+    this.fontSizeValue.textContent = `${this.currentFontSize}px`;
+    this.savePreferences({
+      overlayColor: this.currentColor,
+      tooltipFontSize: this.currentFontSize
+    });
+  }
+
+  async savePreferences(preferences: { overlayColor: string; tooltipFontSize: number }) {
+    await chrome.storage.local.set({ preferences });
+    console.log('Preferences saved:', preferences);
+
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (tabs[0]?.id) {
+      try {
+        await chrome.tabs.sendMessage(
+          tabs[0].id,
+          { action: 'updatePreferences', preferences }
+        );
+      } catch (error) {
+        console.log('Content script not available, preferences will apply on next activation');
+      }
+    }
+  }
+
+  // ============================================================
+  // HISTORY
+  // ============================================================
+
   async loadHistory() {
     chrome.storage.local.get(['history'], (result) => {
       const history = (result.history as any[]) || [];
 
       if (history.length === 0) {
-        this.historyList.innerHTML = `
-          <div class="empty-state">
-            No inspections yet
-          </div>
-        `;
+        this.historyList.innerHTML = '<div class="empty-state">No inspections yet</div>';
         return;
       }
 
       this.historyList.innerHTML = history
-        .slice(0, 10) // Show only last 10 items
-        .map(
-          (item: any) => `
-        <div class="history-item" data-id="${item.id}">
-          <div class="history-item-header">
-            <span class="element-tag">&lt;${item.tagName}&gt;</span>
-            ${item.className ? `<span class="element-class">.${item.className.split(' ')[0]}</span>` : ''}
+        .slice(0, 10)
+        .map((item: any) => `
+          <div class="history-item" data-id="${item.id}">
+            <div class="history-item-header">
+              <span class="element-tag">&lt;${item.tagName}&gt;</span>
+              ${item.className ? `<span class="element-class">.${item.className.split(' ')[0]}</span>` : ''}
+            </div>
+            <div class="history-item-meta">
+              <span>${this.formatTimestamp(item.timestamp)}</span>
+              <span>${Math.round(item.position.width)}×${Math.round(item.position.height)}px</span>
+            </div>
           </div>
-          <div class="history-item-meta">
-            <span>${this.formatTimestamp(item.timestamp)}</span>
-            <span>${Math.round(item.position.width)}×${Math.round(item.position.height)}px</span>
-          </div>
-        </div>
-      `
-        )
-        .join('');
+        `).join('');
 
-      // Add click handlers to history items
       this.historyList.querySelectorAll('.history-item').forEach((item) => {
         item.addEventListener('click', () => {
           const id = item.getAttribute('data-id');
@@ -143,7 +244,6 @@ class PopupController {
   }
 
   async loadHistoryItem(id: string | null) {
-    // Send message to content script to re-open panel with this element
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
     if (tabs[0]?.id && id) {
       chrome.tabs.sendMessage(tabs[0].id, { action: 'loadHistoryItem', id });
@@ -158,56 +258,10 @@ class PopupController {
       });
     }
   }
-
-  loadPreferences() {
-    chrome.storage.local.get(['preferences'], (result) => {
-      const preferences = result.preferences || {
-        colorTheme: 'purple-pink',
-        tooltipFontSize: 12
-      };
-
-      this.colorThemeSelect.value = preferences.colorTheme;
-      this.currentFontSize = preferences.tooltipFontSize;
-      this.fontSizeValue.textContent = `${this.currentFontSize}px`;
-    });
-  }
-
-  handleColorThemeChange() {
-    const colorTheme = this.colorThemeSelect.value;
-    this.savePreferences({ colorTheme, tooltipFontSize: this.currentFontSize });
-  }
-
-  handleFontSizeChange(delta: number) {
-    this.currentFontSize = Math.max(10, Math.min(20, this.currentFontSize + delta));
-    this.fontSizeValue.textContent = `${this.currentFontSize}px`;
-    this.savePreferences({
-      colorTheme: this.colorThemeSelect.value,
-      tooltipFontSize: this.currentFontSize
-    });
-  }
-
-  async savePreferences(preferences: { colorTheme: string; tooltipFontSize: number }) {
-    // Save to storage
-    chrome.storage.local.set({ preferences }, () => {
-      console.log('Preferences saved:', preferences);
-    });
-
-    // Send to content script
-    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (tabs[0]?.id) {
-      chrome.tabs.sendMessage(
-        tabs[0].id,
-        { action: 'updatePreferences', preferences },
-        (response) => {
-          if (chrome.runtime.lastError) {
-            // Content script not loaded yet, that's okay - will load on next activation
-            console.log('Content script not available, preferences will apply on next activation');
-          }
-        }
-      );
-    }
-  }
 }
 
-// Initialize popup
+// ============================================================
+// INIT
+// ============================================================
+
 new PopupController();
