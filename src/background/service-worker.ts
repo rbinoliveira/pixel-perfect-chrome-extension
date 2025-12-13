@@ -1,82 +1,98 @@
 import { InspectedElement } from '../shared/types';
 
+// ============================================================
+// STATE
+// ============================================================
+
 let inspectionMode = false;
 let activeTabId: number | null = null;
 
-// Listen for extension icon click
-chrome.action.onClicked.addListener(async (tab) => {
-  console.log('[Service Worker] Icon clicked, tab:', tab);
-  if (!tab.id) {
-    console.error('[Service Worker] No tab ID');
-    return;
-  }
-  activeTabId = tab.id;
+// ============================================================
+// HELPERS
+// ============================================================
 
-  // Toggle inspection mode
-  inspectionMode = !inspectionMode;
-  console.log('[Service Worker] Inspection mode:', inspectionMode);
+const ICON_PATHS = {
+  active: {
+    16: 'icons/icon-active16.png',
+    48: 'icons/icon-active48.png',
+    128: 'icons/icon-active128.png',
+  },
+  inactive: {
+    16: 'icons/icon16.png',
+    48: 'icons/icon48.png',
+    128: 'icons/icon128.png',
+  },
+};
 
-  // Try to send message to content script (it should already be loaded via manifest)
-  try {
-    const response = await chrome.tabs.sendMessage(tab.id, {
-      action: 'toggleInspection',
-      enabled: inspectionMode,
-    });
-    console.log('[Service Worker] Message sent, response:', response);
-  } catch (error) {
-    console.error('[Service Worker] Failed to send message, trying to inject:', error);
-    // If message fails, content script might not be loaded yet, try injecting
-    try {
-      await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        files: ['content/inspector.js'],
-      });
-      console.log('[Service Worker] Content script injected');
-      // Wait a bit for script to initialize
-      await new Promise(resolve => setTimeout(resolve, 200));
-      // Try sending message again
-      const response = await chrome.tabs.sendMessage(tab.id, {
-        action: 'toggleInspection',
-        enabled: inspectionMode,
-      });
-      console.log('[Service Worker] Message sent after injection, response:', response);
-    } catch (injectError) {
-      console.error('[Service Worker] Failed to inject content script:', injectError);
-      return;
-    }
-  }
-
-  // Update icon to reflect state
+async function updateIcon(tabId: number, isActive: boolean) {
   try {
     await chrome.action.setIcon({
-      path: inspectionMode
-        ? {
-            16: 'icons/icon-active16.png',
-            48: 'icons/icon-active48.png',
-            128: 'icons/icon-active128.png',
-          }
-        : {
-            16: 'icons/icon16.png',
-            48: 'icons/icon48.png',
-            128: 'icons/icon128.png',
-          },
-      tabId: tab.id,
+      path: isActive ? ICON_PATHS.active : ICON_PATHS.inactive,
+      tabId,
     });
-    console.log('[Service Worker] Icon updated');
-  } catch (iconError) {
-    console.warn('[Service Worker] Failed to update icon (non-critical):', iconError);
-    // Continue execution even if icon update fails
+  } catch (error) {
+    console.warn('[Service Worker] Failed to update icon (non-critical):', error);
   }
+}
+
+async function sendToggleMessage(tabId: number, enabled: boolean) {
+  try {
+    const response = await chrome.tabs.sendMessage(tabId, {
+      action: 'toggleInspection',
+      enabled,
+    });
+    return { success: true, response };
+  } catch (error) {
+    return await injectAndRetry(tabId, enabled);
+  }
+}
+
+async function injectAndRetry(tabId: number, enabled: boolean) {
+  try {
+    await chrome.scripting.executeScript({
+      target: { tabId },
+      files: ['content/inspector.js'],
+    });
+    await new Promise(resolve => setTimeout(resolve, 200));
+    const response = await chrome.tabs.sendMessage(tabId, {
+      action: 'toggleInspection',
+      enabled,
+    });
+    return { success: true, response };
+  } catch (error) {
+    console.error('[Service Worker] Failed to inject content script:', error);
+    return { success: false, error };
+  }
+}
+
+async function toggleInspection(tabId: number) {
+  inspectionMode = !inspectionMode;
+  activeTabId = tabId;
+
+  await sendToggleMessage(tabId, inspectionMode);
+  await updateIcon(tabId, inspectionMode);
+}
+
+// ============================================================
+// EXTENSION ICON CLICK
+// ============================================================
+
+chrome.action.onClicked.addListener(async (tab) => {
+  if (!tab.id) return;
+  await toggleInspection(tab.id);
 });
 
-// Handle messages from content scripts and popup
+// ============================================================
+// MESSAGE HANDLERS
+// ============================================================
+
 chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
   switch (message.action) {
     case 'getInspectionState':
       sendResponse({ enabled: inspectionMode });
       break;
+
     case 'toggleInspectionFromPopup':
-      // Handle toggle from popup
       const tabId = message.tabId || (await chrome.tabs.query({ active: true, currentWindow: true }))[0]?.id;
       if (!tabId) {
         sendResponse({ success: false, error: 'No active tab' });
@@ -86,155 +102,44 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
       inspectionMode = message.enabled;
       activeTabId = tabId;
 
-      // Try to send message to content script
-      try {
-        await chrome.tabs.sendMessage(tabId, {
-          action: 'toggleInspection',
-          enabled: inspectionMode,
-        });
-        console.log('[Service Worker] Toggle from popup, mode:', inspectionMode);
-      } catch (error) {
-        console.error('[Service Worker] Failed to send message from popup, trying to inject:', error);
-        try {
-          await chrome.scripting.executeScript({
-            target: { tabId: tabId },
-            files: ['content/inspector.js'],
-          });
-          await new Promise(resolve => setTimeout(resolve, 200));
-          await chrome.tabs.sendMessage(tabId, {
-            action: 'toggleInspection',
-            enabled: inspectionMode,
-          });
-        } catch (injectError) {
-          console.error('[Service Worker] Failed to inject from popup:', injectError);
-          sendResponse({ success: false, error: injectError });
-          return true;
-        }
-      }
-
-      // Update icon
-      try {
-        await chrome.action.setIcon({
-          path: inspectionMode
-            ? {
-                16: 'icons/icon-active16.png',
-                48: 'icons/icon-active48.png',
-                128: 'icons/icon-active128.png',
-              }
-            : {
-                16: 'icons/icon16.png',
-                48: 'icons/icon48.png',
-                128: 'icons/icon128.png',
-              },
-          tabId: tabId,
-        });
-        console.log('[Service Worker] Icon updated from popup');
-      } catch (iconError) {
-        console.warn('[Service Worker] Failed to update icon from popup (non-critical):', iconError);
-        // Continue execution even if icon update fails
-      }
+      await sendToggleMessage(tabId, inspectionMode);
+      await updateIcon(tabId, inspectionMode);
 
       sendResponse({ success: true });
       break;
+
     case 'saveInspectedElement':
-      // Save to chrome.storage
       chrome.storage.local.get(['history'], (result) => {
         const history = (result.history as InspectedElement[]) || [];
         history.unshift(message.element as InspectedElement);
-        // Keep only last 10
         const trimmed = history.slice(0, 10);
         chrome.storage.local.set({ history: trimmed });
       });
       sendResponse({ success: true });
       break;
+
     case 'disableInspection':
       inspectionMode = false;
       if (sender.tab?.id) {
-        try {
-          await chrome.action.setIcon({
-            path: {
-              16: 'icons/icon16.png',
-              48: 'icons/icon48.png',
-              128: 'icons/icon128.png',
-            },
-            tabId: sender.tab.id,
-          });
-        } catch (iconError) {
-          console.warn('[Service Worker] Failed to update icon on disable (non-critical):', iconError);
-        }
+        await updateIcon(sender.tab.id, false);
       }
       sendResponse({ success: true });
       break;
   }
-  return true; // Keep channel open for async response
+  return true;
 });
 
-// Handle keyboard shortcuts
+// ============================================================
+// KEYBOARD SHORTCUTS
+// ============================================================
+
 chrome.commands.onCommand.addListener(async (command) => {
-  console.log('[Service Worker] Command received:', command);
-  if (command === 'toggle-inspection') {
-    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-    const tab = tabs[0];
-    if (!tab?.id) {
-      console.error('[Service Worker] No active tab');
-      return;
-    }
+  if (command !== 'toggle-inspection') return;
 
-    // Toggle inspection mode
-    inspectionMode = !inspectionMode;
-    activeTabId = tab.id;
-    console.log('[Service Worker] Inspection mode (keyboard):', inspectionMode);
+  const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+  const tab = tabs[0];
 
-    // Try to send message to content script (it should already be loaded via manifest)
-    try {
-      const response = await chrome.tabs.sendMessage(tab.id, {
-        action: 'toggleInspection',
-        enabled: inspectionMode,
-      });
-      console.log('[Service Worker] Message sent (keyboard), response:', response);
-    } catch (error) {
-      console.error('[Service Worker] Failed to send message (keyboard), trying to inject:', error);
-      // If message fails, content script might not be loaded yet, try injecting
-      try {
-        await chrome.scripting.executeScript({
-          target: { tabId: tab.id },
-          files: ['content/inspector.js'],
-        });
-        console.log('[Service Worker] Content script injected (keyboard)');
-        // Wait a bit for script to initialize
-        await new Promise(resolve => setTimeout(resolve, 200));
-        // Try sending message again
-        const response = await chrome.tabs.sendMessage(tab.id, {
-          action: 'toggleInspection',
-          enabled: inspectionMode,
-        });
-        console.log('[Service Worker] Message sent after injection (keyboard), response:', response);
-      } catch (injectError) {
-        console.error('[Service Worker] Failed to inject content script (keyboard):', injectError);
-        return;
-      }
-    }
+  if (!tab?.id) return;
 
-    // Update icon to reflect state
-    try {
-      await chrome.action.setIcon({
-        path: inspectionMode
-          ? {
-              16: 'icons/icon-active16.png',
-              48: 'icons/icon-active48.png',
-              128: 'icons/icon-active128.png',
-            }
-          : {
-              16: 'icons/icon16.png',
-              48: 'icons/icon48.png',
-              128: 'icons/icon128.png',
-            },
-        tabId: tab.id,
-      });
-      console.log('[Service Worker] Icon updated (keyboard)');
-    } catch (iconError) {
-      console.warn('[Service Worker] Failed to update icon (keyboard) (non-critical):', iconError);
-      // Continue execution even if icon update fails
-    }
-  }
+  await toggleInspection(tab.id);
 });

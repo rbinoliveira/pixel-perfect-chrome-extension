@@ -1,5 +1,9 @@
 import { InspectedElement, CSSProperties } from '../shared/types';
 
+// ============================================================
+// PANEL RENDERER
+// ============================================================
+
 export class PanelRenderer {
   render(element: InspectedElement): string {
     return `
@@ -27,6 +31,10 @@ export class PanelRenderer {
     `;
   }
 
+  // ============================================================
+  // SECTION RENDERERS
+  // ============================================================
+
   private renderTypography(typography: any): string {
     return `
       <div class="property-section">
@@ -45,12 +53,15 @@ export class PanelRenderer {
   }
 
   private renderDimensions(dimensions: any): string {
+    const width = `${dimensions.width.value}${dimensions.width.unit} (${Math.round(dimensions.width.computed)}px)`;
+    const height = `${dimensions.height.value}${dimensions.height.unit} (${Math.round(dimensions.height.computed)}px)`;
+
     return `
       <div class="property-section">
         <h3>📏 Dimensions</h3>
         <div class="property-list">
-          ${this.renderProperty('Width', `${dimensions.width.value}${dimensions.width.unit} (${Math.round(dimensions.width.computed)}px)`, 'width')}
-          ${this.renderProperty('Height', `${dimensions.height.value}${dimensions.height.unit} (${Math.round(dimensions.height.computed)}px)`, 'height')}
+          ${this.renderProperty('Width', width, 'width')}
+          ${this.renderProperty('Height', height, 'height')}
           ${dimensions.minWidth ? this.renderProperty('Min Width', dimensions.minWidth, 'minWidth') : ''}
           ${dimensions.maxWidth ? this.renderProperty('Max Width', dimensions.maxWidth, 'maxWidth') : ''}
         </div>
@@ -59,15 +70,15 @@ export class PanelRenderer {
   }
 
   private renderSpacing(spacing: any): string {
-    const paddingShorthand = this.formatSpacing(spacing.padding);
-    const marginShorthand = this.formatSpacing(spacing.margin);
+    const padding = this.formatSpacing(spacing.padding);
+    const margin = this.formatSpacing(spacing.margin);
 
     return `
       <div class="property-section">
         <h3>📦 Spacing</h3>
         <div class="property-list">
-          ${this.renderProperty('Padding', paddingShorthand, 'padding')}
-          ${this.renderProperty('Margin', marginShorthand, 'margin')}
+          ${this.renderProperty('Padding', padding, 'padding')}
+          ${this.renderProperty('Margin', margin, 'margin')}
           ${spacing.gap ? this.renderProperty('Gap', spacing.gap, 'gap') : ''}
         </div>
       </div>
@@ -75,12 +86,14 @@ export class PanelRenderer {
   }
 
   private renderBorders(borders: any): string {
+    const border = `${borders.border.width} ${borders.border.style} ${borders.border.color}`;
+
     return `
       <div class="property-section">
         <h3>🔲 Borders</h3>
         <div class="property-list">
           ${this.renderProperty('Border Radius', borders.borderRadius.topLeft, 'borderRadius')}
-          ${this.renderProperty('Border', `${borders.border.width} ${borders.border.style} ${borders.border.color}`, 'border')}
+          ${this.renderProperty('Border', border, 'border')}
         </div>
       </div>
     `;
@@ -100,6 +113,10 @@ export class PanelRenderer {
       </div>
     `;
   }
+
+  // ============================================================
+  // HELPERS
+  // ============================================================
 
   private renderProperty(label: string, value: string, propName: string, colorPreview?: string): string {
     return `
