@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "vite",
+    "test:page": "node test-server.js",
     "build": "npm run build:bundle && npm run build:copy",
     "build:bundle": "node scripts/build-bundle.js",
     "build:copy": "node scripts/copy-assets.js",
