@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Pixel Perfect Inspector",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Inspect and extract CSS properties from DOM elements with pixel-perfect precision.",
   "permissions": ["activeTab", "scripting", "storage"],
   "background": {

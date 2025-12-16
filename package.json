@@ -1,6 +1,6 @@
 {
   "name": "pixel-perfect-chrome-extension",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Inspect and extract CSS properties from DOM elements with pixel-perfect precision",
   "main": "index.js",
   "scripts": {

@@ -1,9 +1,5 @@
 import { CSSExtractor } from './extractor';
 import { OverlayManager } from './overlay';
-import { PanelRenderer } from '../panel/panel';
-import { InspectedElement } from '../shared/types';
-import { ClipboardManager } from '../shared/clipboard';
-import { DataExporter } from '../shared/exporters';
 import { getCurrentTheme, getOverlayColor, SECONDARY_COLOR, TERTIARY_COLOR } from '../shared/constants';
 
 // ============================================================
@@ -13,15 +9,12 @@ import { getCurrentTheme, getOverlayColor, SECONDARY_COLOR, TERTIARY_COLOR } fro
 class PixelPerfectInspector {
   private extractor: CSSExtractor;
   private overlay: OverlayManager;
-  private panelRenderer: PanelRenderer;
   private isEnabled = false;
   private currentElement: HTMLElement | null = null;
   private measurementMode = false;
   private firstElement: HTMLElement | null = null;
   private secondElement: HTMLElement | null = null;
   private measurementLine: HTMLDivElement | null = null;
-  private panelOpen = false;
-  private currentInspectedElement: InspectedElement | null = null;
   private preferences: { overlayColor: string; tooltipFontSize: number } = {
     overlayColor: 'purple',
     tooltipFontSize: 12
@@ -30,7 +23,6 @@ class PixelPerfectInspector {
   constructor() {
     this.extractor = new CSSExtractor();
     this.overlay = new OverlayManager();
-    this.panelRenderer = new PanelRenderer();
     this.setupMessageListener();
     this.loadPreferences();
   }
@@ -52,8 +44,6 @@ class PixelPerfectInspector {
             this.preferences = message.preferences;
             this.applyPreferences();
             sendResponse({ success: true });
-          } else if (message.action === 'loadHistoryItem') {
-            sendResponse({ success: false });
           }
           return true;
         } catch (error) {
@@ -658,114 +648,6 @@ class PixelPerfectInspector {
     this.overlay.updateFontSize(this.preferences.tooltipFontSize);
   }
 
-  // ============================================================
-  // PANEL MANAGEMENT
-  // ============================================================
-
-  private openPanel(element: InspectedElement) {
-    this.currentInspectedElement = element;
-
-    // Create or get panel container
-    let panel = document.getElementById('pixel-perfect-panel') as HTMLDivElement;
-
-    if (!panel) {
-      panel = document.createElement('div');
-      panel.id = 'pixel-perfect-panel';
-      panel.style.cssText = `
-        position: fixed;
-        top: 0;
-        right: 0;
-        width: 400px;
-        height: 100vh;
-        background: white;
-        box-shadow: -2px 0 10px rgba(0,0,0,0.1);
-        z-index: 2147483646;
-        overflow-y: auto;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      `;
-      document.body.appendChild(panel);
-    }
-
-    // Render panel content
-    panel.innerHTML = `
-      <div class="panel-container" style="padding: 20px;">
-        ${this.panelRenderer.render(element)}
-      </div>
-    `;
-
-    this.panelOpen = true;
-
-    // Inject panel CSS if not already injected
-    if (!document.getElementById('pixel-perfect-panel-styles')) {
-      const link = document.createElement('link');
-      link.id = 'pixel-perfect-panel-styles';
-      link.rel = 'stylesheet';
-      link.href = chrome.runtime.getURL('panel/panel.css');
-      document.head.appendChild(link);
-    }
-
-    // Setup event listeners
-    this.setupPanelListeners(panel, element);
-  }
-
-  private closePanel() {
-    const panel = document.getElementById('pixel-perfect-panel');
-    if (panel) {
-      panel.remove();
-    }
-    this.panelOpen = false;
-    this.currentInspectedElement = null;
-  }
-
-  private setupPanelListeners(panel: HTMLElement, element: InspectedElement) {
-    // Close button
-    const closeBtn = panel.querySelector('#close-panel');
-    if (closeBtn) {
-      closeBtn.addEventListener('click', () => this.closePanel());
-    }
-
-    // Copy individual properties
-    panel.querySelectorAll('.copy-btn').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
-        const target = e.target as HTMLElement;
-        const value = target.getAttribute('data-value');
-        if (value) {
-          await ClipboardManager.copyToClipboard(value);
-          ClipboardManager.showCopyFeedback(target);
-        }
-      });
-    });
-
-    // Copy all button
-    const copyAllBtn = panel.querySelector('#copy-all');
-    if (copyAllBtn) {
-      copyAllBtn.addEventListener('click', async () => {
-        const cssText = DataExporter.toCSS(element);
-        await ClipboardManager.copyToClipboard(cssText);
-        ClipboardManager.showCopyFeedback(copyAllBtn as HTMLElement);
-      });
-    }
-
-    // Export JSON button
-    const exportJsonBtn = panel.querySelector('#export-json');
-    if (exportJsonBtn) {
-      exportJsonBtn.addEventListener('click', () => {
-        const json = DataExporter.toJSON(element);
-        const filename = `${element.selector.replace(/[^a-z0-9]/gi, '-')}-${Date.now()}.json`;
-        DataExporter.downloadFile(json, filename, 'application/json');
-      });
-    }
-
-    // Export CSS button
-    const exportCssBtn = panel.querySelector('#export-css');
-    if (exportCssBtn) {
-      exportCssBtn.addEventListener('click', () => {
-        const css = DataExporter.toCSS(element);
-        const filename = `${element.selector.replace(/[^a-z0-9]/gi, '-')}-${Date.now()}.css`;
-        DataExporter.downloadFile(css, filename, 'text/css');
-      });
-    }
-  }
 
   private showContextInvalidatedMessage() {
     const existing = document.getElementById('pixel-perfect-context-error');

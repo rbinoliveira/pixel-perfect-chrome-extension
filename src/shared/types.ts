@@ -79,8 +79,3 @@ export interface ElementPosition {
   width: number;
   height: number;
 }
-
-export interface ExtensionState {
-  inspectionMode: boolean;
-  activeTabId: number | null;
-}

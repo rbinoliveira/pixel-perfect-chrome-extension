@@ -57,12 +57,6 @@ export function getOverlayColor(colorName: string, theme?: 'light' | 'dark'): Co
   return color || colors[0];
 }
 
-export function getOverlayColorByIndex(index: number, theme?: 'light' | 'dark'): ColorOption {
-  const currentTheme = theme || getCurrentTheme();
-  const colors = OVERLAY_COLORS[currentTheme];
-  return colors[index % colors.length];
-}
-
 // ============================================================
 // LAYOUT CONSTANTS
 // ============================================================
@@ -72,59 +66,3 @@ export const OVERLAY_Z_INDEX = 2147483647;
 
 export const SECONDARY_COLOR = '#EC4899';
 export const TERTIARY_COLOR = '#10B981';
-
-// ============================================================
-// CSS EXTRACTION
-// ============================================================
-
-export const CSS_PROPERTIES_TO_EXTRACT = [
-  'font-family',
-  'font-size',
-  'font-weight',
-  'line-height',
-  'letter-spacing',
-  'text-transform',
-  'color',
-  'padding',
-  'padding-top',
-  'padding-right',
-  'padding-bottom',
-  'padding-left',
-  'margin',
-  'margin-top',
-  'margin-right',
-  'margin-bottom',
-  'margin-left',
-  'gap',
-  'width',
-  'height',
-  'min-width',
-  'max-width',
-  'min-height',
-  'max-height',
-  'border-radius',
-  'border',
-  'border-width',
-  'border-style',
-  'border-color',
-  'display',
-  'position',
-  'flex-direction',
-  'justify-content',
-  'align-items',
-] as const;
-
-// ============================================================
-// STORAGE & SHORTCUTS
-// ============================================================
-
-export const STORAGE_KEYS = {
-  HISTORY: 'history',
-  SETTINGS: 'settings',
-} as const;
-
-export const KEYBOARD_SHORTCUTS = {
-  TOGGLE_INSPECTION: 'Ctrl+Shift+I',
-  TOGGLE_INSPECTION_MAC: 'Command+Shift+I',
-  EXIT_INSPECTION: 'Escape',
-} as const;

@@ -5,7 +5,6 @@
 class PopupController {
   private inspectionToggle: HTMLInputElement;
   private statusText: HTMLElement;
-  private historyList: HTMLElement;
   private colorOptions: NodeListOf<Element>;
   private fontSizeValue: HTMLElement;
   private fontSizeDecrease: HTMLButtonElement;
@@ -18,7 +17,6 @@ class PopupController {
   constructor() {
     this.inspectionToggle = document.getElementById('inspection-toggle') as HTMLInputElement;
     this.statusText = document.getElementById('status-text') as HTMLElement;
-    this.historyList = document.getElementById('history-list') as HTMLElement;
     this.colorOptions = document.querySelectorAll('.color-option');
     this.fontSizeValue = document.getElementById('font-size-value') as HTMLElement;
     this.fontSizeDecrease = document.getElementById('font-size-decrease') as HTMLButtonElement;
@@ -41,7 +39,6 @@ class PopupController {
     await this.syncInspectionState();
     this.setupEventListeners();
     await this.loadPreferences();
-    this.loadHistory();
   }
 
   private async syncInspectionState() {
@@ -65,7 +62,6 @@ class PopupController {
 
   private setupEventListeners() {
     this.inspectionToggle.addEventListener('change', () => this.handleToggle());
-    document.getElementById('clear-history')?.addEventListener('click', () => this.clearHistory());
 
     this.colorOptions.forEach(option => {
       option.addEventListener('click', (e) => {
@@ -233,73 +229,6 @@ class PopupController {
     }
   }
 
-  // ============================================================
-  // HISTORY
-  // ============================================================
-
-  async loadHistory() {
-    if (!this.historyList) return;
-
-    chrome.storage.local.get(['history'], (result) => {
-      const history = (result.history as any[]) || [];
-
-      if (history.length === 0) {
-        this.historyList.innerHTML = '<div class="empty-state">No inspections yet</div>';
-        return;
-      }
-
-      this.historyList.innerHTML = history
-        .slice(0, 10)
-        .map((item: any) => `
-          <div class="history-item" data-id="${item.id}">
-            <div class="history-item-header">
-              <span class="element-tag">&lt;${item.tagName}&gt;</span>
-              ${item.className ? `<span class="element-class">.${item.className.split(' ')[0]}</span>` : ''}
-            </div>
-            <div class="history-item-meta">
-              <span>${this.formatTimestamp(item.timestamp)}</span>
-              <span>${Math.round(item.position.width)}×${Math.round(item.position.height)}px</span>
-            </div>
-          </div>
-        `).join('');
-
-      this.historyList.querySelectorAll('.history-item').forEach((item) => {
-        item.addEventListener('click', () => {
-          const id = item.getAttribute('data-id');
-          this.loadHistoryItem(id);
-        });
-      });
-    });
-  }
-
-  formatTimestamp(timestamp: number): string {
-    const now = Date.now();
-    const diff = now - timestamp;
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-
-    if (minutes < 1) return 'Just now';
-    if (minutes < 60) return `${minutes}m ago`;
-    if (hours < 24) return `${hours}h ago`;
-
-    return new Date(timestamp).toLocaleDateString();
-  }
-
-  async loadHistoryItem(id: string | null) {
-    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (tabs[0]?.id && id) {
-      chrome.tabs.sendMessage(tabs[0].id, { action: 'loadHistoryItem', id });
-      window.close();
-    }
-  }
-
-  clearHistory() {
-    if (confirm('Clear all inspection history?')) {
-      chrome.storage.local.set({ history: [] }, () => {
-        this.loadHistory();
-      });
-    }
-  }
 }
 
 // ============================================================

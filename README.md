@@ -5,7 +5,7 @@
 ![Chrome Extension](https://img.shields.io/badge/Chrome-Extension-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
 ![Manifest V3](https://img.shields.io/badge/Manifest-V3-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white)
-![Version](https://img.shields.io/badge/Version-1.0.0-blue.svg?style=for-the-badge)
+![Version](https://img.shields.io/badge/Version-1.0.2-blue.svg?style=for-the-badge)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)
 
 **Inspect and extract CSS properties from DOM elements with pixel-perfect precision**
@@ -34,11 +34,8 @@ A Chrome extension for inspecting and extracting CSS properties from DOM element
 - **Hover Highlighting** - Visual overlay shows element boundaries and dimensions
 - **Smart Tooltips** - Context-aware tooltips show typography for text, layout for containers, and detailed info for images/SVGs
 - **Distance Measurement** - Measure distance between any two elements (horizontal, vertical, diagonal)
-- **One-Click Property Copying** - Copy individual CSS properties instantly
-- **Export Options** - Download complete CSS or JSON data
-- **Inspection History** - Quick access to last 10 inspected elements
 - **Keyboard Shortcuts** - Efficient workflow with hotkeys
-- **Comprehensive Property Extraction** - Typography, spacing, dimensions, borders, and layout
+- **Comprehensive Property Extraction** - Typography, spacing, dimensions, borders, and layout displayed in tooltips
 - **Customizable Themes** - Choose from 5 color themes (Purple-Pink, Blue, Green, Orange, Red)
 - **Adjustable Font Size** - Tooltip font size from 10-20px
 - **Privacy First** - Works entirely locally, no data collection
@@ -95,22 +92,12 @@ npm run build
 
 2. **Inspect Elements**
    - **Hover** over any element to see its dimensions and properties in a tooltip
-   - **Click** to measure distance between two elements (H/V/Diagonal)
-   - **Alt+Click** (Option+Click on Mac) to open the detailed property panel
+   - **Click** on one element, then click on another to measure the distance between them (H/V/Diagonal)
 
-3. **Copy & Export**
-   - Click the 📋 icon next to any property to copy it
-   - Use "Copy All Properties" to copy entire CSS block
-   - Export as JSON or CSS file for documentation
-
-4. **Customize**
+3. **Customize**
    - Open the extension popup to change color themes
    - Adjust tooltip font size (10-20px)
    - Preferences are saved automatically
-
-5. **Access History**
-   - Click the extension icon to view recent inspections
-   - Click any history item to re-open that element's panel
 
 #### Keyboard Shortcuts
 
@@ -194,12 +181,11 @@ pixel-perfect-chrome-extension/
 │   │   ├── inspector.ts    # Main inspector logic
 │   │   ├── extractor.ts    # CSS property extraction
 │   │   └── overlay.ts      # Visual overlay
-│   ├── panel/              # Side panel UI
 │   ├── popup/              # Extension popup
 │   └── shared/             # Shared utilities
 │       ├── types.ts        # TypeScript types
-│       ├── clipboard.ts    # Clipboard management
-│       └── exporters.ts    # Export functionality
+│       ├── constants.ts    # Color themes and constants
+│       └── utils.ts        # Utility functions
 ├── public/                 # Static assets
 └── dist/                   # Built extension (generated)
 ```
@@ -226,13 +212,14 @@ npm run build
 #### Permissions Used
 
 - `activeTab` - Access current tab to inject inspector (only when activated)
-- `storage` - Save inspection history locally
+- `scripting` - Inject CSS and JavaScript for inspection mode
+- `storage` - Save user preferences (theme color, tooltip font size)
 
 #### Privacy Guarantee
 
 - No data is sent to external servers
 - No analytics or tracking
-- History stored only in your browser
+- Preferences stored only in your browser
 - Works completely offline
 - Only activates when you explicitly enable it
 
@@ -254,12 +241,6 @@ npm run build
 - Ensure elements have computed styles
 - Some properties may not apply to certain elements
 - Pseudo-elements are not currently supported
-
-#### Copy/Export Not Working
-
-- Grant clipboard permissions if prompted
-- Check browser console for errors
-- Ensure popup blockers aren't blocking downloads
 
 ### Contributing
 
@@ -304,11 +285,8 @@ Uma extensão do Chrome para inspecionar e extrair propriedades CSS de elementos
 - **Destacar ao Passar o Mouse** - Sobreposição visual mostra limites e dimensões dos elementos
 - **Tooltips Inteligentes** - Tooltips sensíveis ao contexto mostram tipografia para texto, layout para containers e informações detalhadas para imagens/SVGs
 - **Medição de Distância** - Medir distância entre quaisquer dois elementos (horizontal, vertical, diagonal)
-- **Copiar Propriedades com Um Clique** - Copiar propriedades CSS individuais instantaneamente
-- **Opções de Exportação** - Baixar CSS completo ou dados JSON
-- **Histórico de Inspeção** - Acesso rápido aos últimos 10 elementos inspecionados
 - **Atalhos de Teclado** - Fluxo de trabalho eficiente com teclas de atalho
-- **Extração Abrangente de Propriedades** - Tipografia, espaçamento, dimensões, bordas e layout
+- **Extração Abrangente de Propriedades** - Tipografia, espaçamento, dimensões, bordas e layout exibidos nos tooltips
 - **Temas Personalizáveis** - Escolha entre 5 temas de cores (Roxo-Rosa, Azul, Verde, Laranja, Vermelho)
 - **Tamanho de Fonte Ajustável** - Tamanho da fonte do tooltip de 10-20px
 - **Privacidade em Primeiro Lugar** - Funciona inteiramente localmente, sem coleta de dados
@@ -365,22 +343,12 @@ npm run build
 
 2. **Inspecionar Elementos**
    - **Passe o mouse** sobre qualquer elemento para ver suas dimensões e propriedades em um tooltip
-   - **Clique** para medir a distância entre dois elementos (H/V/Diagonal)
-   - **Alt+Clique** (Option+Clique no Mac) para abrir o painel de propriedades detalhado
+   - **Clique** em um elemento e depois em outro para medir a distância entre eles (H/V/Diagonal)
 
-3. **Copiar e Exportar**
-   - Clique no ícone 📋 ao lado de qualquer propriedade para copiá-la
-   - Use "Copiar Todas as Propriedades" para copiar o bloco CSS completo
-   - Exporte como arquivo JSON ou CSS para documentação
-
-4. **Personalizar**
+3. **Personalizar**
    - Abra o popup da extensão para alterar os temas de cores
    - Ajuste o tamanho da fonte do tooltip (10-20px)
    - As preferências são salvas automaticamente
-
-5. **Acessar Histórico**
-   - Clique no ícone da extensão para visualizar inspeções recentes
-   - Clique em qualquer item do histórico para reabrir o painel daquele elemento
 
 #### Atalhos de Teclado
 
@@ -464,12 +432,11 @@ pixel-perfect-chrome-extension/
 │   │   ├── inspector.ts    # Lógica principal do inspetor
 │   │   ├── extractor.ts    # Extração de propriedades CSS
 │   │   └── overlay.ts      # Sobreposição visual
-│   ├── panel/              # Interface do painel lateral
 │   ├── popup/              # Popup da extensão
 │   └── shared/             # Utilitários compartilhados
 │       ├── types.ts        # Tipos TypeScript
-│       ├── clipboard.ts    # Gerenciamento da área de transferência
-│       └── exporters.ts    # Funcionalidade de exportação
+│       ├── constants.ts    # Temas de cores e constantes
+│       └── utils.ts        # Funções utilitárias
 ├── public/                 # Recursos estáticos
 └── dist/                   # Extensão compilada (gerada)
 ```
@@ -496,13 +463,14 @@ npm run build
 #### Permissões Usadas
 
 - `activeTab` - Acesso à aba atual para injetar o inspetor (somente quando ativado)
-- `storage` - Salvar histórico de inspeção localmente
+- `scripting` - Injetar CSS e JavaScript para o modo de inspeção
+- `storage` - Salvar preferências do usuário (cor do tema, tamanho da fonte)
 
 #### Garantia de Privacidade
 
 - Nenhum dado é enviado para servidores externos
 - Sem análises ou rastreamento
-- Histórico armazenado apenas no seu navegador
+- Preferências armazenadas apenas no seu navegador
 - Funciona completamente offline
 - Só é ativado quando você o habilita explicitamente
 
@@ -524,12 +492,6 @@ npm run build
 - Certifique-se de que os elementos têm estilos computados
 - Algumas propriedades podem não se aplicar a certos elementos
 - Pseudo-elementos não são suportados atualmente
-
-#### Copiar/Exportar Não Funciona
-
-- Conceda permissões da área de transferência se solicitado
-- Verifique o console do navegador para erros
-- Certifique-se de que bloqueadores de popup não estão bloqueando downloads
 
 ### Contribuindo
 

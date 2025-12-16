@@ -1,5 +1,3 @@
-import { InspectedElement } from '../shared/types';
-
 // ============================================================
 // STATE
 // ============================================================
@@ -118,16 +116,6 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
       await updateIcon(tabId, inspectionMode);
 
       sendResponse({ success: result.success, error: result.error });
-      break;
-
-    case 'saveInspectedElement':
-      chrome.storage.local.get(['history'], (result) => {
-        const history = (result.history as InspectedElement[]) || [];
-        history.unshift(message.element as InspectedElement);
-        const trimmed = history.slice(0, 10);
-        chrome.storage.local.set({ history: trimmed });
-      });
-      sendResponse({ success: true });
       break;
 
     case 'disableInspection':

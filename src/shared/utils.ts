@@ -12,10 +12,6 @@ export function generateUniqueId(): string {
 // CSS UTILITIES
 // ============================================================
 
-export function formatCSSValue(value: string): string {
-  return value.trim();
-}
-
 export function parseUnit(value: string): { value: number; unit: string } {
   const withUnit = value.match(/^([\d.]+)([a-z%]*)$/);
   if (withUnit) {
