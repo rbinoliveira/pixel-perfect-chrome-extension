@@ -10,260 +10,9 @@
 
 **Inspect and extract CSS properties from DOM elements with pixel-perfect precision**
 
-[English](#english) | [Português](#português)
+[🇧🇷 Português](#português) | [🇬🇧 English](#english)
 
 </div>
-
----
-
-## English
-
-### Overview
-
-A Chrome extension for inspecting and extracting CSS properties from DOM elements with pixel-perfect precision. Perfect for developers ensuring accurate design implementations, designers checking spacing and typography, and anyone learning CSS.
-
-### System Requirements
-
-- **Browser:** Google Chrome 88+ or Chromium-based browsers (Edge, Brave, Opera)
-- **Operating System:** Windows 10+, macOS 10.13+, or Linux
-- **Disk Space:** ~5MB
-- **Permissions:** Active tab access and local storage
-
-### Features
-
-- **Hover Highlighting** - Visual overlay shows element boundaries and dimensions
-- **Smart Tooltips** - Context-aware tooltips show typography for text, layout for containers, and detailed info for images/SVGs
-- **Distance Measurement** - Measure distance between any two elements (horizontal, vertical, diagonal)
-- **Keyboard Shortcuts** - Efficient workflow with hotkeys
-- **Comprehensive Property Extraction** - Typography, spacing, dimensions, borders, and layout displayed in tooltips
-- **Customizable Themes** - Choose from 5 color themes (Purple-Pink, Blue, Green, Orange, Red)
-- **Adjustable Font Size** - Tooltip font size from 10-20px
-- **Privacy First** - Works entirely locally, no data collection
-
-### Screenshots
-
-#### Extension Popup
-![Extension Popup](screenshots/1.png)
-*Extension popup showing inspection mode toggle, color theme preferences (Purple→Pink), font size controls (12px), and quick guide.*
-
-#### Tooltip in Action
-![Tooltip Example](screenshots/2.png)
-*Smart tooltip showing typography properties (font-size: 16px, font-family: Inter, color: white, line-height: 28px, font-weight: 400) for a paragraph element on MDN Web Docs.*
-
-#### Distance Measurement
-![Distance Measurement](screenshots/3.png)
-*Measure distance between any two elements with pixel-perfect precision. Shows the exact distance value in a clean, large format.*
-
-### Installation
-
-#### From Chrome Web Store (Recommended)
-
-1. Visit the [Chrome Web Store listing](https://chromewebstore.google.com/detail/pixel-perfect-inspector/knoolbdfpeelnchildnodakohkifcbgg)
-2. Click "Add to Chrome"
-3. Confirm installation
-
-#### From Source (Development)
-
-```bash
-# Clone the repository
-git clone https://github.com/devrubinho/pixel-perfect-chrome-extension.git
-cd pixel-perfect-chrome-extension
-
-# Install dependencies
-npm install
-
-# Build the extension
-npm run build
-
-# Load in Chrome
-# 1. Open Chrome and go to chrome://extensions/
-# 2. Enable "Developer mode" (top-right toggle)
-# 3. Click "Load unpacked"
-# 4. Select the `dist` folder from the project
-```
-
-### Usage
-
-#### Quick Start
-
-1. **Activate Inspection Mode**
-   - Click the extension icon in the toolbar, OR
-   - Use keyboard shortcut: `Ctrl+Shift+P` (Mac: `Cmd+Shift+P`)
-
-2. **Inspect Elements**
-   - **Hover** over any element to see its dimensions and properties in a tooltip
-   - **Click** on one element, then click on another to measure the distance between them (H/V/Diagonal)
-
-3. **Customize**
-   - Open the extension popup to change color themes
-   - Adjust tooltip font size (10-20px)
-   - Preferences are saved automatically
-
-#### Keyboard Shortcuts
-
-- `Ctrl+Shift+P` (Mac: `Cmd+Shift+P`) - Toggle inspection mode
-- `Esc` - Exit inspection mode
-
-**Note:** `Cmd+Shift+I` on Mac opens Chrome DevTools, so we use `Cmd+Shift+P` instead
-
-#### Command Flags (Development)
-
-```bash
-npm install        # Install dependencies
-npm run build      # Production build
-npm run dev        # Development mode
-npm run test:page  # Run test server
-npm run package    # Package extension for distribution
-```
-
-### Use Cases
-
-#### For Developers
-- Verify design implementations match specifications
-- Extract exact spacing, typography, and layout values
-- Debug layout issues by inspecting computed properties
-- Document component styles for style guides
-
-#### For Designers
-- Check if developers implemented designs accurately
-- Extract CSS values from existing websites for inspiration
-- Verify responsive design breakpoints
-- Analyze competitor website styles
-
-#### For Learners
-- Understand how CSS properties work together
-- Learn from well-designed websites
-- Experiment with different property combinations
-- Study real-world CSS implementations
-
-### Extracted Properties
-
-#### Typography
-- Font Family
-- Font Size
-- Font Weight
-- Line Height
-- Color
-- Letter Spacing
-- Text Transform
-
-#### Dimensions
-- Width (with computed value)
-- Height (with computed value)
-- Min/Max Width
-- Min/Max Height
-
-#### Spacing
-- Padding (all sides, with shorthand)
-- Margin (all sides, with shorthand)
-- Gap (for flexbox/grid)
-
-#### Borders
-- Border Radius (all corners)
-- Border Width, Style, Color
-
-#### Layout
-- Display
-- Position
-- Flex Direction
-- Justify Content
-- Align Items
-
-### Development
-
-#### Project Structure
-
-```
-pixel-perfect-chrome-extension/
-├── src/
-│   ├── background/          # Service worker
-│   ├── content/            # Content scripts
-│   │   ├── inspector.ts    # Main inspector logic
-│   │   ├── extractor.ts    # CSS property extraction
-│   │   └── overlay.ts      # Visual overlay
-│   ├── popup/              # Extension popup
-│   └── shared/             # Shared utilities
-│       ├── types.ts        # TypeScript types
-│       ├── constants.ts    # Color themes and constants
-│       └── utils.ts        # Utility functions
-├── public/                 # Static assets
-└── dist/                   # Built extension (generated)
-```
-
-#### Tech Stack
-
-- **TypeScript 5+** - Type-safe development
-- **Chrome Extension Manifest V3** - Latest extension platform
-- **Vite** - Fast build tool
-- **Vanilla JS** - No framework dependencies for minimal bundle size
-
-#### Building for Production
-
-```bash
-# Build optimized version
-npm run build
-
-# The dist/ folder contains the production-ready extension
-# Test it by loading in Chrome before publishing
-```
-
-### Privacy & Permissions
-
-#### Permissions Used
-
-- `activeTab` - Access current tab to inject inspector (only when activated)
-- `scripting` - Inject CSS and JavaScript for inspection mode
-- `storage` - Save user preferences (theme color, tooltip font size)
-
-#### Privacy Guarantee
-
-- No data is sent to external servers
-- No analytics or tracking
-- Preferences stored only in your browser
-- Works completely offline
-- Only activates when you explicitly enable it
-
-### Troubleshooting
-
-#### Extension Icon Not Appearing
-
-- Ensure the extension is enabled in `chrome://extensions/`
-- Pin the extension to the toolbar via the extensions menu
-
-#### Inspection Mode Not Working
-
-- Refresh the page after installing/updating the extension
-- Check that you've granted necessary permissions
-- Try on a different website (some sites may block extensions)
-
-#### Properties Not Displaying Correctly
-
-- Ensure elements have computed styles
-- Some properties may not apply to certain elements
-- Pseudo-elements are not currently supported
-
-### Contributing
-
-Contributions are welcome! Please feel free to submit issues or pull requests.
-
-#### Development Setup
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/my-feature`
-3. Make your changes
-4. Test thoroughly
-5. Commit: `git commit -m "Add my feature"`
-6. Push: `git push origin feature/my-feature`
-7. Create a Pull Request
-
-### License
-
-MIT License - see [LICENSE](LICENSE) file for details
-
-### Support
-
-- [Report a Bug](https://github.com/devrubinho/pixel-perfect-chrome-extension/issues)
-- [Request a Feature](https://github.com/devrubinho/pixel-perfect-chrome-extension/issues)
 
 ---
 
@@ -515,6 +264,257 @@ Licença MIT - veja o arquivo [LICENSE](LICENSE) para detalhes
 
 - [Reportar um Bug](https://github.com/devrubinho/pixel-perfect-chrome-extension/issues)
 - [Solicitar uma Feature](https://github.com/devrubinho/pixel-perfect-chrome-extension/issues)
+
+---
+
+## English
+
+### Overview
+
+A Chrome extension for inspecting and extracting CSS properties from DOM elements with pixel-perfect precision. Perfect for developers ensuring accurate design implementations, designers checking spacing and typography, and anyone learning CSS.
+
+### System Requirements
+
+- **Browser:** Google Chrome 88+ or Chromium-based browsers (Edge, Brave, Opera)
+- **Operating System:** Windows 10+, macOS 10.13+, or Linux
+- **Disk Space:** ~5MB
+- **Permissions:** Active tab access and local storage
+
+### Features
+
+- **Hover Highlighting** - Visual overlay shows element boundaries and dimensions
+- **Smart Tooltips** - Context-aware tooltips show typography for text, layout for containers, and detailed info for images/SVGs
+- **Distance Measurement** - Measure distance between any two elements (horizontal, vertical, diagonal)
+- **Keyboard Shortcuts** - Efficient workflow with hotkeys
+- **Comprehensive Property Extraction** - Typography, spacing, dimensions, borders, and layout displayed in tooltips
+- **Customizable Themes** - Choose from 5 color themes (Purple-Pink, Blue, Green, Orange, Red)
+- **Adjustable Font Size** - Tooltip font size from 10-20px
+- **Privacy First** - Works entirely locally, no data collection
+
+### Screenshots
+
+#### Extension Popup
+![Extension Popup](screenshots/1.png)
+*Extension popup showing inspection mode toggle, color theme preferences (Purple→Pink), font size controls (12px), and quick guide.*
+
+#### Tooltip in Action
+![Tooltip Example](screenshots/2.png)
+*Smart tooltip showing typography properties (font-size: 16px, font-family: Inter, color: white, line-height: 28px, font-weight: 400) for a paragraph element on MDN Web Docs.*
+
+#### Distance Measurement
+![Distance Measurement](screenshots/3.png)
+*Measure distance between any two elements with pixel-perfect precision. Shows the exact distance value in a clean, large format.*
+
+### Installation
+
+#### From Chrome Web Store (Recommended)
+
+1. Visit the [Chrome Web Store listing](https://chromewebstore.google.com/detail/pixel-perfect-inspector/knoolbdfpeelnchildnodakohkifcbgg)
+2. Click "Add to Chrome"
+3. Confirm installation
+
+#### From Source (Development)
+
+```bash
+# Clone the repository
+git clone https://github.com/devrubinho/pixel-perfect-chrome-extension.git
+cd pixel-perfect-chrome-extension
+
+# Install dependencies
+npm install
+
+# Build the extension
+npm run build
+
+# Load in Chrome
+# 1. Open Chrome and go to chrome://extensions/
+# 2. Enable "Developer mode" (top-right toggle)
+# 3. Click "Load unpacked"
+# 4. Select the `dist` folder from the project
+```
+
+### Usage
+
+#### Quick Start
+
+1. **Activate Inspection Mode**
+   - Click the extension icon in the toolbar, OR
+   - Use keyboard shortcut: `Ctrl+Shift+P` (Mac: `Cmd+Shift+P`)
+
+2. **Inspect Elements**
+   - **Hover** over any element to see its dimensions and properties in a tooltip
+   - **Click** on one element, then click on another to measure the distance between them (H/V/Diagonal)
+
+3. **Customize**
+   - Open the extension popup to change color themes
+   - Adjust tooltip font size (10-20px)
+   - Preferences are saved automatically
+
+#### Keyboard Shortcuts
+
+- `Ctrl+Shift+P` (Mac: `Cmd+Shift+P`) - Toggle inspection mode
+- `Esc` - Exit inspection mode
+
+**Note:** `Cmd+Shift+I` on Mac opens Chrome DevTools, so we use `Cmd+Shift+P` instead
+
+#### Command Flags (Development)
+
+```bash
+npm install        # Install dependencies
+npm run build      # Production build
+npm run dev        # Development mode
+npm run test:page  # Run test server
+npm run package    # Package extension for distribution
+```
+
+### Use Cases
+
+#### For Developers
+- Verify design implementations match specifications
+- Extract exact spacing, typography, and layout values
+- Debug layout issues by inspecting computed properties
+- Document component styles for style guides
+
+#### For Designers
+- Check if developers implemented designs accurately
+- Extract CSS values from existing websites for inspiration
+- Verify responsive design breakpoints
+- Analyze competitor website styles
+
+#### For Learners
+- Understand how CSS properties work together
+- Learn from well-designed websites
+- Experiment with different property combinations
+- Study real-world CSS implementations
+
+### Extracted Properties
+
+#### Typography
+- Font Family
+- Font Size
+- Font Weight
+- Line Height
+- Color
+- Letter Spacing
+- Text Transform
+
+#### Dimensions
+- Width (with computed value)
+- Height (with computed value)
+- Min/Max Width
+- Min/Max Height
+
+#### Spacing
+- Padding (all sides, with shorthand)
+- Margin (all sides, with shorthand)
+- Gap (for flexbox/grid)
+
+#### Borders
+- Border Radius (all corners)
+- Border Width, Style, Color
+
+#### Layout
+- Display
+- Position
+- Flex Direction
+- Justify Content
+- Align Items
+
+### Development
+
+#### Project Structure
+
+```
+pixel-perfect-chrome-extension/
+├── src/
+│   ├── background/          # Service worker
+│   ├── content/            # Content scripts
+│   │   ├── inspector.ts    # Main inspector logic
+│   │   ├── extractor.ts    # CSS property extraction
+│   │   └── overlay.ts      # Visual overlay
+│   ├── popup/              # Extension popup
+│   └── shared/             # Shared utilities
+│       ├── types.ts        # TypeScript types
+│       ├── constants.ts    # Color themes and constants
+│       └── utils.ts        # Utility functions
+├── public/                 # Static assets
+└── dist/                   # Built extension (generated)
+```
+
+#### Tech Stack
+
+- **TypeScript 5+** - Type-safe development
+- **Chrome Extension Manifest V3** - Latest extension platform
+- **Vite** - Fast build tool
+- **Vanilla JS** - No framework dependencies for minimal bundle size
+
+#### Building for Production
+
+```bash
+# Build optimized version
+npm run build
+
+# The dist/ folder contains the production-ready extension
+# Test it by loading in Chrome before publishing
+```
+
+### Privacy & Permissions
+
+#### Permissions Used
+
+- `activeTab` - Access current tab to inject inspector (only when activated)
+- `scripting` - Inject CSS and JavaScript for inspection mode
+- `storage` - Save user preferences (theme color, tooltip font size)
+
+#### Privacy Guarantee
+
+- No data is sent to external servers
+- No analytics or tracking
+- Preferences stored only in your browser
+- Works completely offline
+- Only activates when you explicitly enable it
+
+### Troubleshooting
+
+#### Extension Icon Not Appearing
+
+- Ensure the extension is enabled in `chrome://extensions/`
+- Pin the extension to the toolbar via the extensions menu
+
+#### Inspection Mode Not Working
+
+- Refresh the page after installing/updating the extension
+- Check that you've granted necessary permissions
+- Try on a different website (some sites may block extensions)
+
+#### Properties Not Displaying Correctly
+
+- Ensure elements have computed styles
+- Some properties may not apply to certain elements
+- Pseudo-elements are not currently supported
+
+### Contributing
+
+Contributions are welcome! Please feel free to submit issues or pull requests.
+
+#### Development Setup
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/my-feature`
+3. Make your changes
+4. Test thoroughly
+5. Commit: `git commit -m "Add my feature"`
+6. Push: `git push origin feature/my-feature`
+7. Create a Pull Request
+
+### License
+
+MIT License - see [LICENSE](LICENSE) file for details
+
+### Support
+
+- [Report a Bug](https://github.com/devrubinho/pixel-perfect-chrome-extension/issues)
+- [Request a Feature](https://github.com/devrubinho/pixel-perfect-chrome-extension/issues)
 
 ---
 
